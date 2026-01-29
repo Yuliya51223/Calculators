@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Калькуляторы продукции</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Калькуляторы</h1>
+
+  <section class="card">
+    <h2>Калькулятор основной продукции</h2>
+
+    <div class="grid">
+      <div>
+        <label for="w">Длина по коньку/Длина забора/Длина фасада (м)</label>
+        <input id="w" type="number" value="0" min="0" step="0.01">
+      </div>
+
+      <div>
+        <label for="l">Высота фасада (м)</label>
+        <input id="l" type="number" value="0" min="0" step="0.01">
+      </div>
+
+      <div></div>
+    </div>
+
+    <div class="grid" style="margin-top:12px;">
+      <div>
+        <label for="useCase">Назначение</label>
+        <select id="useCase">
+          <option value="">— выберите —</option>
+          <option value="roof">Кровля</option>
+          <option value="fence">Забор</option>
+          <option value="facade">Фасад</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- БЛОК КРОВЛЯ -->
+    <div id="block-roof" class="calc-block hidden">
+      <h3>Кровля</h3>
+
+      <label for="roofType">Тип кровли</label>
+      <select id="roofType">
+        <option value="">— выберите —</option>
+        <option value="metal_tile">Металлочерепица</option>
+        <option value="profnastil">Профнастил</option>
+        <option value="falc">Фальцевая кровля</option>
+      </select>
+
+      <label for="roofProfile">Профиль</label>
+      <select id="roofProfile" disabled>
+        <option value="">— выберите тип кровли —</option>
+      </select>
+    </div>
+
+    <!-- БЛОК ЗАБОР -->
+    <div id="block-fence" class="calc-block hidden">
+      <h3>Забор</h3>
+
+      <label for="fenceType">Тип забора</label>
+      <select id="fenceType">
+        <option value="">— выберите —</option>
+        <option value="profnastil">Профнастил</option>
+        <option value="shtaketnik">Штакетник</option>
+        <option value="siding">Сайдинг</option>
+      </select>
+
+      <div id="gap-wrap" class="hidden">
+        <label for="gap">Зазор между планками (мм)</label>
+        <input id="gap" type="number" value="0" min="0" step="1">
+      </div>
+
+      <label for="fenceProfile">Профиль</label>
+      <select id="fenceProfile" disabled>
+        <option value="">— выберите тип забора —</option>
+      </select>
+    </div>
+
+    <!-- БЛОК ФАСАД -->
+    <div id="block-facade" class="calc-block hidden">
+      <h3>Фасад</h3>
+
+      <label for="facadeType">Тип фасада</label>
+      <select id="facadeType">
+        <option value="">— выберите —</option>
+        <option value="profnastil">Профнастил</option>
+        <option value="siding">Сайдинг</option>
+      </select>
+
+      <label for="facadeProfile">Профиль</label>
+      <select id="facadeProfile" disabled>
+        <option value="">— выберите тип фасада —</option>
+      </select>
+    </div>
+
+    <button id="calcBtn" type="button">Рассчитать</button>
+
+    <div class="out">
+      <div class="row"><span>Количество листов (шт)</span><strong id="area">—</strong></div>
+      <div class="err" id="err"></div>
+    </div>
+  </section>
+<section class="card">
+  <h2>Калькулятор жалюзийного забора</h2>
+
+  <!-- КОНТЕЙНЕР СЕКЦИЙ -->
+  <div id="sectionsWrap"></div>
+
+  <button id="addSectionBtn" type="button">Добавить секцию</button>
+<button id="j_pdfBtn" type="button" class="hidden">Скачать PDF</button>
+  <button id="j_calcBtn" type="button">Рассчитать</button>
+
+  
+
+<div id="j_tableWrap"></div>
+<div class="err" id="j_err"></div>
+
+<button id="j_pdfBtn" type="button" class="hidden">Скачать PDF</button>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="fonts.js"></script>
+<script src="main.js"></script>
+
+</body>
+</html>

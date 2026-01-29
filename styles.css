@@ -1,0 +1,256 @@
+body{
+  font-family: Montserrat, sans-serif;
+  max-width: 980px;
+  margin: 24px auto;
+  padding: 0 16px;
+  color: #000000;
+}
+
+h1{ margin: 0 0 14px; }
+h2{ margin: 0 0 10px; }
+h3{ margin: 0 0 10px; }
+
+.card{
+  border: 1px solid #000000;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+/* Сетка для верхних полей */
+.grid{
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  column-gap: 32px;
+  row-gap: 16px;
+  margin: 12px 0;
+}
+
+/* Единая логика: элементы формы тянутся по ширине своей колонки */
+label{
+  display:block;
+  margin-bottom:6px;
+  font-size: 14px;
+}
+
+input, select{
+  width: 100%;
+  max-width: 240px;           /* фиксируем “аккуратную” длину */
+  padding: 10px;
+  border: 1px solid #000000;
+  border-radius: 10px;
+  color: #000000;
+  font-family: Montserrat, sans-serif;
+  box-sizing: border-box;
+}
+
+/* Поле “Зазор” — чуть короче (по желанию) */
+#gap{
+  max-width: 180px;
+}
+
+/* Кнопка */
+button{
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #000000;
+  background: #000000;
+  cursor: pointer;
+  color: #fff;
+  font-family: Montserrat, sans-serif;
+}
+
+/* Блок результата */
+.out{
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f3f3f3;
+}
+
+.row{
+  display:flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 6px 0;
+}
+
+.err{
+  color:#b00020;
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+/* Скрытие */
+.hidden { display: none; }
+
+/* Внутренние блоки “Кровля/Забор/Фасад” */
+.calc-block{
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  background: #fff;
+}
+
+/* Чуть воздуха между полями внутри calc-block */
+.calc-block label{
+  margin-top: 10px;
+}
+
+/* Первому label в блоке — без верхнего отступа */
+.calc-block label:first-of-type{
+  margin-top: 0;
+}
+
+/* Адаптив */
+@media (max-width: 760px){
+  .grid{
+    grid-template-columns: 1fr;
+    column-gap: 16px;
+  }
+
+  input, select{
+    max-width: 100%;
+  }
+
+  #gap{
+    max-width: 100%;
+  }
+}
+.hint{
+  font-size: 12px;
+  color: #666;
+}
+select:disabled{
+  background: #f0f0f0;
+  color: #777;
+  cursor: not-allowed;
+}
+.grid3{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  column-gap: 32px;
+  row-gap: 16px;
+  margin: 12px 0;
+}
+
+.col{
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field label{
+  margin-bottom: 6px;
+}
+
+@media (max-width: 760px){
+  .grid3{
+    grid-template-columns: 1fr;
+  }
+}
+.section-title{
+  margin: 20px 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.add-section{
+  margin-top: 12px;
+  margin-right: 12px;
+}
+.section-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0 8px;
+}
+
+.section-title{
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.remove-section{
+  background: transparent;
+  border: 1px solid #000;
+  color: #000;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.remove-section:hover{
+  background: #000;
+  color: #fff;
+}
+/* ===== Таблица жалюзийного забора ===== */
+.table-wrap{
+  overflow-x: auto;
+  padding-bottom: 8px;
+  border-radius: 12px;
+}
+
+/* сама таблица */
+.bom{
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1100px; /* чтобы группы не слипались */
+  font-size: 12px;   /* меньше шрифт */
+  line-height: 1.25;
+}
+
+/* границы + выравнивание */
+.bom th, .bom td{
+  border: 1px solid #cfcfcf;   /* разлиновка */
+  padding: 6px 8px;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* шапка (2 строки) */
+.bom thead th{
+  background: #f2f2f2;
+  font-weight: 700;
+}
+
+/* подшапка "Размер/Кол-во" */
+.bom thead .subhead{
+  background: #fafafa;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+/* зебра строк */
+.bom tbody tr:nth-child(odd){
+  background: #ffffff;
+}
+.bom tbody tr:nth-child(even){
+  background: #f8f8f8;
+}
+
+/* hover для чтения по строке */
+.bom tbody tr:hover{
+  background: #ececec;
+}
+
+/* закрепляем шапку при прокрутке (удобно) */
+.bom thead th{
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* чуть компактнее на очень узких экранах */
+@media (max-width: 760px){
+  .bom{
+    font-size: 11px;
+  }
+  .bom th, .bom td{
+    padding: 5px 6px;
+  }
+}
