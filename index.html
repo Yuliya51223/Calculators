@@ -9,6 +9,8 @@
 <body>
   <h1>Калькуляторы</h1>
 
+<!-- КАЛЬКУЛЯТОР ОСНОВНОЙ ПРОДУКЦИИ -->
+
   <section class="card">
     <h2>Калькулятор основной продукции</h2>
 
@@ -103,7 +105,10 @@
       <div class="err" id="err"></div>
     </div>
   </section>
-<section class="card">
+
+<!-- КАЛЬКУЛЯТОР ЖАЛЮЗИЙНОГО ЗАБОРА -->
+
+  <section class="card" style="margin-top:16px;">
   <h2>Калькулятор жалюзийного забора</h2>
 
   <!-- КОНТЕЙНЕР СЕКЦИЙ -->
@@ -122,6 +127,74 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="fonts.js"></script>
+</section>
+
+<!-- КАЛЬКУЛЯТОР АРОЧНОГО ШТАКЕТНИКА -->
+
+<section class="card" style="margin-top:16px;">
+  <h2>Калькулятор арочного штакетника</h2>
+
+  <div class="grid">
+    <div>
+      <label for="a_span">Ширина пролёта (мм)</label>
+      <input id="a_span" type="number" value="0" min="1" step="1">
+    </div>
+
+    <div>
+      <label for="a_edge_h">Высота у стоек (мм)</label>
+      <input id="a_edge_h" type="number" value="0" min="1" step="1">
+    </div>
+
+    <div>
+      <label for="a_center_h">Высота по центру (мм)</label>
+      <input id="a_center_h" type="number" value="0" min="1" step="1">
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+  <label for="a_plank_w">Ширина планки (мм)</label>
+  <select id="a_plank_w">
+    <option value="">— выберите —</option>
+    <option value="126">126</option>
+    <option value="131">131</option>
+    <option value="117">117</option>
+    <option value="118">118</option>
+  </select>
+</div>
+
+
+    <div>
+      <label for="a_gap">Зазор между планками (мм)</label>
+      <input id="a_gap" type="number" value="0" min="0" step="1">
+    </div>
+
+    <div>
+      <label for="a_chess">Шахматный порядок</label>
+      <select id="a_chess">
+        <option value="no">Нет</option>
+        <option value="yes">Да</option>
+      </select>
+    </div>
+  </div>
+
+  <button id="a_calcBtn" type="button">Рассчитать</button>
+<button id="a_pdfBtn" type="button" class="hidden" style="margin-left:12px;">
+  Скачать PDF
+</button>
+
+  <div class="out">
+    <div class="row"><span>Количество планок (шт)</span><strong id="a_qty">—</strong></div>
+    <div class="row"><span>Мин. высота (мм)</span><strong id="a_min">—</strong></div>
+    <div class="row"><span>Макс. высота (мм)</span><strong id="a_max">—</strong></div>
+    <div class="err" id="a_err"></div>
+
+    <div id="a_tableWrap" style="margin-top:12px;"></div>
+    <div id="a_summaryWrap" style="margin-top:12px;"></div>
+  </div>
+</section>
+
+
 <script src="main.js"></script>
 
 </body>

@@ -299,6 +299,8 @@ document.addEventListener('DOMContentLoaded', () => {
   resetFacadeProfile();
   resetResult();
 
+
+
   // ============================================================
   // 2) КАЛЬКУЛЯТОР ЖАЛЮЗИЙНОГО ЗАБОРА (СЕКЦИИ + ТАБЛИЦА)
   // ============================================================
@@ -846,3 +848,374 @@ jPdfBtn.addEventListener('click', downloadJaluziPdf);
 
   jCalcBtn.addEventListener('click', jCalc);
 });
+
+
+// =====================
+// 3) Арочный штакетник
+// =====================
+const aSpan = document.getElementById('a_span');
+const aEdgeH = document.getElementById('a_edge_h');
+const aCenterH = document.getElementById('a_center_h');
+const aPlankW = document.getElementById('a_plank_w');
+const aGap = document.getElementById('a_gap');
+const aChess = document.getElementById('a_chess');
+
+const aCalcBtn = document.getElementById('a_calcBtn');
+const aPdfBtn  = document.getElementById('a_pdfBtn');
+
+const aQtyEl = document.getElementById('a_qty');
+const aMinEl = document.getElementById('a_min');
+const aMaxEl = document.getElementById('a_max');
+const aErrEl = document.getElementById('a_err');
+const aTableWrap = document.getElementById('a_tableWrap');
+const aSummaryWrap = document.getElementById('a_summaryWrap');
+
+// для PDF
+let aLastInput = null;
+let aLastRow1 = null;
+let aLastRow2 = null;
+let aLastSummaryRows = null; // [{h, qty}]
+
+function aReset(){
+  if (aQtyEl) aQtyEl.textContent = '—';
+  if (aMinEl) aMinEl.textContent = '—';
+  if (aMaxEl) aMaxEl.textContent = '—';
+  if (aErrEl) aErrEl.textContent = '';
+  if (aTableWrap) aTableWrap.innerHTML = '';
+  if (aSummaryWrap) aSummaryWrap.innerHTML = '';
+  if (aPdfBtn) aPdfBtn.classList.add('hidden');
+
+  aLastInput = null;
+  aLastRow1 = null;
+  aLastRow2 = null;
+  aLastSummaryRows = null;
+}
+
+function roundToCm(mm){
+  return Math.round(mm / 10) * 10; // кратно 10 мм (1 см)
+}
+
+// ====== ВЫСОТА ПО ФОРМУЛАМ EXCEL (r, d) ======
+function arcHeightAtX(span, edgeH, centerH, x){
+  // f = centerH - edgeH
+  // a = span/2
+  // r = (span^2/(8*f)) + f/2
+  // d = sqrt(r^2 - a^2)
+  // H(x) = edgeH + ( sqrt(r^2 - x^2) - d )
+
+  const f = centerH - edgeH;
+  const a = span / 2;
+
+  if (!isFinite(f) || Math.abs(f) < 1e-9) return edgeH;
+
+  const r = (span * span) / (8 * f) + (f / 2);
+  const d = Math.sqrt(Math.max(0, r * r - a * a));
+
+  const under = r * r - x * x;
+  if (under <= 0) return edgeH;
+
+  return edgeH + (Math.sqrt(under) - d);
+}
+
+// ====== РЯД (с плавностью: считаем float -> сглаживаем -> -10 -> центр -> округление) ======
+function buildPickersExcelSmooth(span, edgeH, centerH, plankW, gap, offset){
+  const list = [];
+  const P = plankW + gap;
+  if (!isFinite(P) || P <= 0) return list;
+
+  const Nraw = (span + gap) / (plankW + gap);
+  const N = Math.floor(Nraw); // как было
+  if (N <= 0) return list;
+
+  const a = span / 2;
+
+  // 1) сырые высоты (float)
+  const raw = [];
+  for (let i = 0; i < N; i++){
+    const pos = (plankW / 2) + i * P + offset; // мм от левого края
+    const x = pos - a;                         // мм от центра
+    let h = arcHeightAtX(span, edgeH, centerH, x);
+
+    // края строго по стойке
+    if (i === 0 || i === N - 1) h = edgeH;
+
+    raw.push(h);
+  }
+
+  // 2) сглаживание (2 прохода скользящим средним)
+  let smooth = raw.slice();
+  for (let pass = 0; pass < 2; pass++){
+    const tmp = smooth.slice();
+    for (let i = 1; i < N - 1; i++){
+      tmp[i] = (smooth[i - 1] + smooth[i] + smooth[i + 1]) / 3;
+    }
+    tmp[0] = edgeH;
+    tmp[N - 1] = edgeH;
+    smooth = tmp;
+  }
+
+  // 3) -10 мм всем кроме первой/последней
+  for (let i = 1; i < N - 1; i++){
+    smooth[i] -= 10;
+  }
+
+  // 4) центр(а) = высоте по центру
+  const mid1 = Math.floor((N - 1) / 2);
+  const mid2 = Math.ceil((N - 1) / 2);
+  if (mid1 !== 0 && mid1 !== N - 1) smooth[mid1] = centerH;
+  if (mid2 !== 0 && mid2 !== N - 1) smooth[mid2] = centerH;
+
+  // 5) не выше центра, финальное округление до 10 мм
+  const centerRounded = roundToCm(centerH);
+  const edgeRounded = roundToCm(edgeH);
+
+  for (let i = 0; i < N; i++){
+    let h = smooth[i];
+
+    if (h > centerH) h = centerH;
+    if (h < 0) h = 0;
+
+    h = roundToCm(h);
+
+    // защита после округления
+    if (i === 0 || i === N - 1) h = edgeRounded;
+    if (i === mid1 || i === mid2) h = centerRounded;
+
+    list.push(h);
+  }
+
+  return list;
+}
+
+function renderArchedTable(rowA, rowB){
+  if (!aTableWrap) return;
+
+  let html = `
+    <table class="small-table">
+      <thead>
+        <tr>
+          <th>№</th>
+          <th>Высота (ряд 1), мм</th>
+          <th>Высота (ряд 2), мм</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  const maxN = Math.max(rowA.length, rowB.length, 1);
+  for (let i = 0; i < maxN; i++){
+    html += `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${rowA[i] ?? '—'}</td>
+        <td>${rowB[i] ?? '—'}</td>
+      </tr>
+    `;
+  }
+
+  html += `</tbody></table>`;
+  aTableWrap.innerHTML = html;
+}
+
+// ====== СВОДКА (объединяем одинаковые размеры) ======
+function renderArchedSummaryGrouped(row1, row2, chess){
+  if (!aSummaryWrap) return [];
+
+  const N = row1.length;
+  const map = new Map(); // height -> qty
+
+  for (let i = 0; i < N; i++){
+    const h = row1[i];
+    if (h == null) continue;
+
+    let qty = chess ? (row2[i] != null ? 2 : 1) : 1;
+
+    // если N нечётное — последняя строка = 1
+    if (chess && (N % 2 === 1) && i === N - 1) qty = 1;
+
+    map.set(h, (map.get(h) || 0) + qty);
+  }
+
+  const rows = Array.from(map.entries())
+    .map(([h, qty]) => ({ h: Number(h), qty }))
+    .sort((a,b) => a.h - b.h);
+
+  const body = rows.map(r => `
+    <tr>
+      <td>${r.h}</td>
+      <td>${r.qty}</td>
+    </tr>
+  `).join('');
+
+  aSummaryWrap.innerHTML = `
+    <table class="small-table" style="max-width:520px;">
+      <thead>
+        <tr>
+          <th>Высота H(x), мм</th>
+          <th>Кол-во (шахматка), шт</th>
+        </tr>
+      </thead>
+      <tbody>${body}</tbody>
+    </table>
+  `;
+
+  return rows;
+}
+
+function aCalc(){
+  aReset();
+
+  const span = Number(aSpan?.value);
+  const edgeH = Number(aEdgeH?.value);
+  const centerH = Number(aCenterH?.value);
+  const plankW = Number(aPlankW?.value);
+  const gap = Number(aGap?.value);
+  const chess = aChess?.value === 'yes';
+
+  if (!isFinite(span) || span <= 0) { if(aErrEl) aErrEl.textContent = 'Введите ширину пролёта (мм) > 0'; return; }
+  if (!isFinite(edgeH) || edgeH <= 0) { if(aErrEl) aErrEl.textContent = 'Введите высоту у стоек (мм) > 0'; return; }
+  if (!isFinite(centerH) || centerH <= 0) { if(aErrEl) aErrEl.textContent = 'Введите высоту по центру (мм) > 0'; return; }
+  if (!isFinite(plankW) || plankW <= 0) { if(aErrEl) aErrEl.textContent = 'Выберите ширину планки'; return; }
+  if (!isFinite(gap) || gap < 0) { if(aErrEl) aErrEl.textContent = 'Зазор не может быть отрицательным'; return; }
+
+  const P = plankW + gap;
+  if (P <= 0) { if(aErrEl) aErrEl.textContent = 'Ширина планки + зазор должны быть > 0'; return; }
+
+  const row1 = buildPickersExcelSmooth(span, edgeH, centerH, plankW, gap, 0);
+  let row2 = chess ? buildPickersExcelSmooth(span, edgeH, centerH, plankW, gap, P / 2) : [];
+
+  // если N нечётное — последняя позиция второго ряда отсутствует
+  if (chess && (row1.length % 2 === 1) && row2.length === row1.length) {
+    row2.pop();
+  }
+
+  const all = row1.concat(row2);
+  const qty = chess ? (row1.length + row2.length) : row1.length;
+
+  const minH = all.length ? Math.min(...all) : 0;
+  const maxH = all.length ? Math.max(...all) : 0;
+
+  if (aQtyEl) aQtyEl.textContent = String(qty);
+  if (aMinEl) aMinEl.textContent = String(minH);
+  if (aMaxEl) aMaxEl.textContent = String(maxH);
+
+  renderArchedTable(row1, row2);
+  const summaryRows = renderArchedSummaryGrouped(row1, row2, chess);
+
+  // сохраняем для PDF
+  aLastInput = { span, edgeH, centerH, plankW, gap, chess };
+  aLastRow1 = row1.slice();
+  aLastRow2 = row2.slice();
+  aLastSummaryRows = summaryRows;
+
+  if (aPdfBtn) aPdfBtn.classList.remove('hidden');
+}
+
+// ===== PDF =====
+function downloadArchedPdf(){
+  if (!aLastInput || !aLastSummaryRows) return;
+
+  const jsPDF = window.jspdf?.jsPDF;
+  if (!jsPDF) {
+    if (aErrEl) aErrEl.textContent = 'PDF не может быть создан: jsPDF не загружен';
+    return;
+  }
+
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+  // Montserrat (если подключён fonts.js)
+  const fontB64 = window.__PDF_FONT_MONTSERRAT__;
+  if (fontB64) {
+    try {
+      doc.addFileToVFS('Montserrat-Regular.ttf', fontB64);
+      doc.addFont('Montserrat-Regular.ttf', 'Montserrat', 'normal');
+      doc.setFont('Montserrat', 'normal');
+    } catch(e) {}
+  }
+
+  doc.setFontSize(14);
+  doc.text('Расчёт арочного штакетника', 14, 12);
+
+  const { span, edgeH, centerH, plankW, gap, chess } = aLastInput;
+
+  const info = [
+    ['Ширина пролёта, мм', String(span)],
+    ['Высота у стоек, мм', String(edgeH)],
+    ['Высота по центру, мм', String(centerH)],
+    ['Ширина планки, мм', String(plankW)],
+    ['Зазор, мм', String(gap)],
+    ['Шахматный порядок', chess ? 'Да' : 'Нет'],
+  ];
+
+  if (doc.autoTable) {
+    doc.autoTable({
+      head: [['Параметр', 'Значение']],
+      body: info,
+      startY: 16,
+      theme: 'grid',
+      styles: { font: fontB64 ? 'Montserrat' : undefined, fontSize: 9, cellPadding: 2, valign: 'middle' },
+      headStyles: { fillColor: [240,240,240], textColor: 0, lineWidth: 0.2, lineColor: [0,0,0] },
+      bodyStyles: { lineWidth: 0.2, lineColor: [0,0,0] },
+      alternateRowStyles: { fillColor: [250,250,250] },
+      margin: { left: 14, right: 14 }
+    });
+
+    let y = doc.lastAutoTable.finalY + 8;
+
+    const sumBody = aLastSummaryRows.map(r => [String(r.h), String(r.qty)]);
+    doc.autoTable({
+      head: [['Высота H(x), мм', 'Кол-во (шахматка), шт']],
+      body: sumBody,
+      startY: y,
+      theme: 'grid',
+      styles: { font: fontB64 ? 'Montserrat' : undefined, fontSize: 9, cellPadding: 2, halign: 'center' },
+      headStyles: { fillColor: [240,240,240], textColor: 0, lineWidth: 0.2, lineColor: [0,0,0] },
+      bodyStyles: { lineWidth: 0.2, lineColor: [0,0,0] },
+      alternateRowStyles: { fillColor: [250,250,250] },
+      margin: { left: 14, right: 14 },
+      tableWidth: 120
+    });
+
+    y = doc.lastAutoTable.finalY + 8;
+
+    const maxN = Math.max(aLastRow1?.length || 0, aLastRow2?.length || 0, 1);
+    const rowsBody = [];
+    for (let i = 0; i < maxN; i++){
+      rowsBody.push([
+        String(i + 1),
+        aLastRow1?.[i] != null ? String(aLastRow1[i]) : '—',
+        aLastRow2?.[i] != null ? String(aLastRow2[i]) : '—'
+      ]);
+    }
+
+    doc.autoTable({
+      head: [['№', 'Высота (ряд 1), мм', 'Высота (ряд 2), мм']],
+      body: rowsBody,
+      startY: y,
+      theme: 'grid',
+      styles: { font: fontB64 ? 'Montserrat' : undefined, fontSize: 8.5, cellPadding: 2, halign: 'center' },
+      headStyles: { fillColor: [240,240,240], textColor: 0, lineWidth: 0.2, lineColor: [0,0,0] },
+      bodyStyles: { lineWidth: 0.2, lineColor: [0,0,0] },
+      alternateRowStyles: { fillColor: [250,250,250] },
+      margin: { left: 14, right: 14 }
+    });
+  } else {
+    // fallback
+    doc.setFontSize(10);
+    let y = 20;
+    info.forEach(([k,v]) => { doc.text(`${k}: ${v}`, 14, y); y += 6; });
+  }
+
+  doc.save('raschet-arochnyi-shtaketnik.pdf');
+}
+
+// события
+[aSpan, aEdgeH, aCenterH, aGap].forEach(el => el && el.addEventListener('input', aReset));
+if (aPlankW) aPlankW.addEventListener('change', aReset);
+if (aChess) aChess.addEventListener('change', aReset);
+
+if (aCalcBtn) aCalcBtn.addEventListener('click', aCalc);
+if (aPdfBtn) aPdfBtn.addEventListener('click', downloadArchedPdf);
+
+
+
