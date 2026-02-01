@@ -118,7 +118,6 @@ button{
     max-width: 100%;
   }
 }
-
 .hint{
   font-size: 12px;
   color: #666;
@@ -129,13 +128,11 @@ button{
   margin: 6px 0 14px;
 }
 .top-note a{ color: inherit; }
-
 select:disabled{
   background: #f0f0f0;
   color: #777;
   cursor: not-allowed;
 }
-
 .grid3{
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -159,7 +156,6 @@ select:disabled{
     grid-template-columns: 1fr;
   }
 }
-
 .section-title{
   margin: 20px 0 8px;
   font-size: 16px;
@@ -170,7 +166,6 @@ select:disabled{
   margin-top: 12px;
   margin-right: 12px;
 }
-
 .section-header{
   display: flex;
   justify-content: space-between;
@@ -198,7 +193,6 @@ select:disabled{
   background: #000;
   color: #fff;
 }
-
 /* ===== Таблица жалюзийного забора ===== */
 .table-wrap{
   overflow-x: auto;
@@ -266,7 +260,6 @@ select:disabled{
     padding: 5px 6px;
   }
 }
-
 .small-table{
   width: 100%;
   border-collapse: collapse;
@@ -346,6 +339,7 @@ select:disabled{
   .roof-picks{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
+
 /* === Sofit fixes === */
 .soffit-trims {
   display: grid;
@@ -360,6 +354,7 @@ select:disabled{
   margin: 0;
   cursor: pointer;
 }
+
 
 /* Sofit trims block */
 .trims-block{
@@ -382,13 +377,18 @@ select:disabled{
 .trims-item{
   display:flex;
   align-items:center;
-  gap:6px; /* ближе к галочке */
+  gap:8px; /* closer label to checkbox */
   margin:0;
   font-size:14px;
   line-height:1.2;
 }
 .trims-item input{ margin:0; }
+
+
+/* Sofit trims: keep labels on one line and closer to checkbox */
+.trims-item{ gap:6px; }
 .trims-item span{ white-space:nowrap; }
+
 
 /* Sofit result table improvements */
 .mp-table{
@@ -407,166 +407,131 @@ select:disabled{
 .mp-table th:nth-child(3),
 .mp-table td:nth-child(3){ width:25%; }
 
-/* ===== Основной продукт → Забор: чекбоксы (одна строка, текст близко) ===== */
+
+
+
+
+
+
+
+
+
+/* Основной продукт — забор: аккуратное размещение чекбоксов */
 #mp_fence .mp-fence-checks{
-  margin: 0;
-  padding: 0;
+  grid-column: 2 / 4;   /* справа от поля длины */
+  align-self: start;
+  margin-top: 0;
+  padding-top: 22px;    /* примерно высота лейбла, чтобы чекбоксы были "вровень" с надписью "Длина забора" */
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: fit-content;
+  flex-direction: row;
+  gap: 26px;
+  flex-wrap: wrap;
+}
+#mp_fence .mp-fence-checks .check{
+  display:flex;
+  align-items:center;
+  gap:4px;              /* максимально близко */
+  margin:0;
+  font-size:14px;
+  line-height:1.1;
+  white-space:nowrap;   /* строго одна строка */
+}
+#mp_fence .mp-fence-checks .check input{
+  margin:0;
+}
+#mp_fence .mp-fence-checks .check span{
+  white-space:nowrap;
 }
 
-/* ВАЖНО: используем селектор с mp-fence-checks, чтобы не затрагивать другие label */
-#mp_fence .mp-fence-checks label.check{
-  display: inline-flex;   /* не растягиваемся на всю ширину */
-  align-items: center;
-  gap: 2px;               /* максимально близко к галочке */
-  margin: 0;
-  padding: 0;
-  font-size: 14px;
-  line-height: 1.1;
-  white-space: nowrap;    /* строго одна строка */
+/* мобильная версия */
+@media (max-width: 760px){
+  #mp_fence .mp-fence-checks{
+    grid-column: 1 / -1;
+    padding-top: 0;
+    gap: 12px;
+  }
+  #mp_fence .mp-fence-checks .check{
+  display:flex;
+  align-items:center;
+  gap:4px;              /* максимально близко */
+  margin:0;
+  font-size:14px;
+  line-height:1.1;
+  white-space:nowrap;   /* строго одна строка */
+}
 }
 
-#mp_fence .mp-fence-checks label.check input{
-  margin: 0;
-}
 
-#mp_fence .mp-fence-checks label.check span{
-  white-space: nowrap;
-}
-/* FIX: убираем "правое" выравнивание у чекбоксов в заборе */
-#mp_fence .mp-fence-checks,
-#mp_fence .mp-fence-checks label.check,
-#mp_fence .mp-fence-checks label.check span{
-  text-align: left !important;
-}
-
-#mp_fence .mp-fence-checks{
-  justify-content: flex-start !important;
-  align-items: flex-start !important;
-}
-
-#mp_fence .mp-fence-checks label.check{
-  display: inline-flex !important;
-  justify-content: flex-start !important;
-  align-items: center !important;
-  gap: 2px !important;           /* ближе к галочке */
-  white-space: nowrap !important; /* одна строка */
-}
-
-#mp_fence .mp-fence-checks label.check input{
-  margin: 0 !important;
-}
 /* =========================
-   MOBILE OPTIMIZATION
-   вставь в конец styles.css
+   MOBILE: fix all checkboxes alignment (all calculators)
    ========================= */
 @media (max-width: 760px){
 
-  body{
-    margin: 14px auto;
-    padding: 0 12px;
+  /* universal label+checkbox layout */
+  label.check,
+  .checks label,
+  .checks .check,
+  .mp-fence-checks label.check,
+  .trims-item,
+  .soffit-trims label{
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+    text-align: left !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
   }
 
-  .card{
-    padding: 12px;
-    border-radius: 12px;
+  /* checkbox input shouldn't add weird margins */
+  label.check input[type="checkbox"],
+  .checks input[type="checkbox"],
+  .mp-fence-checks input[type="checkbox"],
+  .trims-item input[type="checkbox"],
+  .soffit-trims input[type="checkbox"]{
+    margin: 2px 0 0 0 !important;
+    flex: 0 0 auto !important;
   }
 
-  h1{ font-size: 20px; }
-  h2{ font-size: 16px; }
-  h3{ font-size: 15px; }
-
-  /* все сетки в одну колонку */
-  .grid, .grid3{
-    grid-template-columns: 1fr !important;
-    row-gap: 12px;
-    column-gap: 12px;
+  /* allow text wrap on mobile, so nothing "uезжает" */
+  label.check span,
+  .checks label span,
+  .checks .check span,
+  .mp-fence-checks label.check span,
+  .trims-item span,
+  .soffit-trims label span{
+    white-space: normal !important;
+    line-height: 1.25 !important;
   }
 
-  /* инпуты и селекты на всю ширину */
-  input, select{
-    max-width: 100% !important;
-  }
-
-  /* кнопки на всю ширину */
-  button{
-    width: 100%;
-  }
-
-  /* блок результата компактнее */
-  .out{
-    padding: 10px;
-  }
-
-  /* строки результата пусть переносятся */
-  .row{
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  /* таблицы: гарантируем горизонтальный скролл */
-  .table-wrap{
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .bom{
-    min-width: 900px; /* можно 800–1100 по вкусу */
-  }
-
-  /* софиты: доборы и подписи не "распирают" */
+  /* Sofit trims: stack items vertically */
   .trims-block{
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+    align-items: flex-start !important;
   }
   .trims-list{
-    gap: 10px;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
   }
-  .trims-item span{
-    white-space: normal; /* на мобиле лучше разрешить перенос */
+  .trims-item{
+    white-space: normal !important;
   }
 
-  /* таблица расчёта софитов: чуть плотнее */
-  .mp-table th, .mp-table td{
-    padding: 8px 10px;
+  /* Generic checks groups: stack vertically */
+  .checks{
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
   }
 
-  /* забор (основной продукт): чекбоксы в столбик, без "разъезда" */
+  /* Fence checks block: stack */
   #mp_fence .mp-fence-checks{
-    width: 100%;
-    gap: 10px;
-  }
-  #mp_fence .mp-fence-checks label.check{
-    white-space: normal !important;  /* на мобиле лучше перенос */
-  }
-
-  /* кнопки выбора типа крыши (водосточка): 3 в ряд */
-  .roof-picks{
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 8px;
-  }
-  .roof-btn{
-    padding: 8px 6px;
-  }
-  .roof-btn img{
-    width: 38px;
-    height: 38px;
-  }
-  .roof-btn span{
-    font-size: 11px;
-  }
-}
-
-/* дополнительный брейкпоинт для очень узких экранов */
-@media (max-width: 380px){
-  .roof-picks{
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-  button{
-    padding: 10px 12px;
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 10px !important;
   }
 }
