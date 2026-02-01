@@ -343,9 +343,9 @@ select:disabled{
 /* === Sofit fixes === */
 .soffit-trims {
   display: grid;
-  grid-template-columns: 24px auto;
-  column-gap: 8px;
-  row-gap: 10px;
+  grid-template-columns: 20px 1fr;
+  column-gap: 6px;
+  row-gap: 8px;
   align-items: center;
   margin-top: 6px;
 }
@@ -377,7 +377,7 @@ select:disabled{
 .trims-item{
   display:flex;
   align-items:center;
-  gap:8px; /* closer label to checkbox */
+  gap:6px; /* closer label to checkbox */
   margin:0;
   font-size:14px;
   line-height:1.2;
