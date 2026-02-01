@@ -1,140 +1,58 @@
+/* =========================
+   RESET / BASE
+   ========================= */
+*{ box-sizing: border-box; }
+html, body{ margin:0; padding:0; }
 body{
   font-family: Montserrat, sans-serif;
   max-width: 980px;
   margin: 24px auto;
   padding: 0 16px;
-  color: #000000;
+  color:#000;
 }
 
 h1{ margin: 0 0 14px; }
 h2{ margin: 0 0 10px; }
 h3{ margin: 0 0 10px; }
 
+.hidden{ display:none !important; }
+
+/* =========================
+   CARD / LAYOUT
+   ========================= */
 .card{
-  border: 1px solid #000000;
+  border: 1px solid #000;
   border-radius: 14px;
   padding: 16px;
+  background:#fff;
 }
 
-/* Сетка для верхних полей */
+.section-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin: 20px 0 8px;
+}
+.section-title{
+  margin:0;
+  font-size:16px;
+  font-weight:600;
+}
+
+/* =========================
+   GRIDS
+   ========================= */
 .grid{
-  display: grid;
+  display:grid;
   grid-template-columns: 1.5fr 1fr 1fr;
   column-gap: 32px;
   row-gap: 16px;
   margin: 12px 0;
 }
 
-/* Единая логика: элементы формы тянутся по ширине своей колонки */
-label{
-  display:block;
-  margin-bottom:6px;
-  font-size: 14px;
-}
-
-input, select{
-  width: 100%;
-  max-width: 240px;           /* фиксируем “аккуратную” длину */
-  padding: 10px;
-  border: 1px solid #000000;
-  border-radius: 10px;
-  color: #000000;
-  font-family: Montserrat, sans-serif;
-  box-sizing: border-box;
-}
-
-/* Поле “Зазор” — чуть короче (по желанию) */
-#gap{
-  max-width: 180px;
-}
-
-/* Кнопка */
-button{
-  margin-top: 10px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid #000000;
-  background: #000000;
-  cursor: pointer;
-  color: #fff;
-  font-family: Montserrat, sans-serif;
-}
-
-/* Блок результата */
-.out{
-  margin-top: 14px;
-  padding: 12px;
-  border-radius: 12px;
-  background: #f3f3f3;
-}
-
-.row{
-  display:flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 6px 0;
-}
-
-.err{
-  color:#b00020;
-  margin-top: 8px;
-  font-size: 13px;
-}
-
-/* Скрытие */
-.hidden { display: none; }
-
-/* Внутренние блоки “Кровля/Забор/Фасад” */
-.calc-block{
-  margin-top: 12px;
-  padding: 12px;
-  border: 1px solid #e5e5e5;
-  border-radius: 12px;
-  background: #fff;
-}
-
-/* Чуть воздуха между полями внутри calc-block */
-.calc-block label{
-  margin-top: 10px;
-}
-
-/* Первому label в блоке — без верхнего отступа */
-.calc-block label:first-of-type{
-  margin-top: 0;
-}
-
-/* Адаптив */
-@media (max-width: 760px){
-  .grid{
-    grid-template-columns: 1fr;
-    column-gap: 16px;
-  }
-
-  input, select{
-    max-width: 100%;
-  }
-
-  #gap{
-    max-width: 100%;
-  }
-}
-.hint{
-  font-size: 12px;
-  color: #666;
-}
-
-.top-note{
-  font-size: 13px;
-  margin: 6px 0 14px;
-}
-.top-note a{ color: inherit; }
-select:disabled{
-  background: #f0f0f0;
-  color: #777;
-  cursor: not-allowed;
-}
 .grid3{
-  display: grid;
+  display:grid;
   grid-template-columns: 1fr 1fr 1fr;
   column-gap: 32px;
   row-gap: 16px;
@@ -142,221 +60,280 @@ select:disabled{
 }
 
 .col{
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
 }
 
-.field label{
-  margin-bottom: 6px;
+/* =========================
+   FORM CONTROLS
+   ========================= */
+label{
+  display:block;
+  margin-bottom:6px;
+  font-size:14px;
+  text-align:left;               /* важный предохранитель */
 }
 
-@media (max-width: 760px){
-  .grid3{
-    grid-template-columns: 1fr;
-  }
-}
-.section-title{
-  margin: 20px 0 8px;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.add-section{
-  margin-top: 12px;
-  margin-right: 12px;
-}
-.section-header{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 20px 0 8px;
+input, select{
+  width:100%;
+  max-width:240px;
+  padding:10px;
+  border:1px solid #000;
+  border-radius:10px;
+  color:#000;
+  font-family: Montserrat, sans-serif;
+  background:#fff;
 }
 
-.section-title{
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0;
+select:disabled{
+  background:#f0f0f0;
+  color:#777;
+  cursor:not-allowed;
 }
+
+#gap{ max-width:180px; }
+
+button{
+  margin-top:10px;
+  padding:10px 14px;
+  border-radius:10px;
+  border:1px solid #000;
+  background:#000;
+  color:#fff;
+  font-family: Montserrat, sans-serif;
+  cursor:pointer;
+}
+
+.add-section{ margin-top:12px; margin-right:12px; }
 
 .remove-section{
-  background: transparent;
-  border: 1px solid #000;
-  color: #000;
-  padding: 6px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 13px;
+  background:transparent;
+  border:1px solid #000;
+  color:#000;
+  padding:6px 10px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:13px;
+}
+.remove-section:hover{ background:#000; color:#fff; }
+
+/* =========================
+   CALC BLOCKS
+   ========================= */
+.calc-block{
+  margin-top:12px;
+  padding:12px;
+  border:1px solid #e5e5e5;
+  border-radius:12px;
+  background:#fff;
+}
+.calc-block label{ margin-top:10px; }
+.calc-block label:first-of-type{ margin-top:0; }
+
+.hint{ font-size:12px; color:#666; }
+.top-note{ font-size:13px; margin: 6px 0 14px; }
+.top-note a{ color:inherit; }
+
+/* =========================
+   OUTPUT
+   ========================= */
+.out{
+  margin-top:14px;
+  padding:12px;
+  border-radius:12px;
+  background:#f3f3f3;
 }
 
-.remove-section:hover{
-  background: #000;
-  color: #fff;
+.row{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin:6px 0;
 }
-/* ===== Таблица жалюзийного забора ===== */
+
+.err{
+  color:#b00020;
+  margin-top:8px;
+  font-size:13px;
+}
+
+/* =========================
+   TABLES
+   ========================= */
 .table-wrap{
-  overflow-x: auto;
-  padding-bottom: 8px;
-  border-radius: 12px;
+  overflow-x:auto;
+  padding-bottom:8px;
+  border-radius:12px;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* сама таблица */
+/* жалюзийный забор */
 .bom{
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 1100px; /* чтобы группы не слипались */
-  font-size: 12px;   /* меньше шрифт */
-  line-height: 1.25;
+  width:100%;
+  border-collapse:collapse;
+  min-width:1100px;
+  font-size:12px;
+  line-height:1.25;
 }
-
-/* границы + выравнивание */
 .bom th, .bom td{
-  border: 1px solid #cfcfcf;   /* разлиновка */
-  padding: 6px 8px;
-  text-align: center;
-  vertical-align: middle;
-  white-space: nowrap;
+  border:1px solid #cfcfcf;
+  padding:6px 8px;
+  text-align:center;
+  vertical-align:middle;
+  white-space:nowrap;
 }
-
-/* шапка (2 строки) */
 .bom thead th{
-  background: #f2f2f2;
-  font-weight: 700;
+  background:#f2f2f2;
+  font-weight:700;
+  position:sticky;
+  top:0;
+  z-index:2;
 }
-
-/* подшапка "Размер/Кол-во" */
 .bom thead .subhead{
-  background: #fafafa;
-  font-weight: 600;
-  font-size: 11px;
+  background:#fafafa;
+  font-weight:600;
+  font-size:11px;
 }
+.bom tbody tr:nth-child(even){ background:#f8f8f8; }
+.bom tbody tr:hover{ background:#ececec; }
 
-/* зебра строк */
-.bom tbody tr:nth-child(odd){
-  background: #ffffff;
-}
-.bom tbody tr:nth-child(even){
-  background: #f8f8f8;
-}
-
-/* hover для чтения по строке */
-.bom tbody tr:hover{
-  background: #ececec;
-}
-
-/* закрепляем шапку при прокрутке (удобно) */
-.bom thead th{
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-
-/* чуть компактнее на очень узких экранах */
-@media (max-width: 760px){
-  .bom{
-    font-size: 11px;
-  }
-  .bom th, .bom td{
-    padding: 5px 6px;
-  }
-}
+/* простая таблица */
 .small-table{
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
+  width:100%;
+  border-collapse:collapse;
+  font-size:12px;
 }
-
 .small-table th, .small-table td{
-  border: 1px solid #000;
-  padding: 6px 8px;
-  text-align: center;
-  white-space: nowrap;
+  border:1px solid #000;
+  padding:6px 8px;
+  text-align:center;
+  white-space:nowrap;
 }
+.small-table thead th{ background:#e9e9e9; }
+.small-table tbody tr:nth-child(even){ background:#f5f5f5; }
 
-.small-table thead th{
-  background: #e9e9e9;
+/* таблица результата софитов */
+.mp-table{
+  width:100%;
+  border-collapse:collapse;
 }
-
-.small-table tbody tr:nth-child(even){
-  background: #f5f5f5;
+.mp-table th, .mp-table td{
+  border:1px solid #000;
+  padding:10px 14px;
 }
+.mp-table th:nth-child(1), .mp-table td:nth-child(1){ width:50%; }
+.mp-table th:nth-child(2), .mp-table td:nth-child(2){ width:25%; }
+.mp-table th:nth-child(3), .mp-table td:nth-child(3){ width:25%; }
 
-.arc-drawing-wrap {
-  margin-top: 16px;
-  padding: 12px;
-  border: 1px solid #000;
-  border-radius: 12px;
+/* =========================
+   DRAWINGS
+   ========================= */
+.arc-drawing-wrap{
+  margin-top:16px;
+  padding:12px;
+  border:1px solid #000;
+  border-radius:12px;
 }
+#arcSvg{ background:#fafafa; }
 
-/* ===== Подсистема на фасад ===== */
-.wall{
-  border-top: 1px dashed #d0d0d0;
-  padding-top: 12px;
-  margin-top: 12px;
-}
-
-#arcSvg {
-  background: #fafafa;
-}
-
-.card:first-of-type{ margin-top: 0; }
-
-/* ===== Калькулятор водосточной системы: кнопки типов крыш ===== */
+/* =========================
+   GUTTER ROOF BUTTONS
+   ========================= */
 .roof-picks{
-  display: grid;
+  display:grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
+  gap:10px;
 }
 .roof-btn{
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 8px;
-  border-radius: 12px;
-  border: 1px solid #000;
-  background: #fff;
-  color: #000;
-  cursor: pointer;
-  width: 100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  padding:10px 8px;
+  border-radius:12px;
+  border:1px solid #000;
+  background:#fff;
+  color:#000;
+  cursor:pointer;
+  width:100%;
 }
 .roof-btn img{
-  width: 44px;
-  height: 44px;
-  object-fit: contain;
-  display: block;
+  width:44px;
+  height:44px;
+  object-fit:contain;
+  display:block;
 }
 .roof-btn span{
-  font-size: 12px;
-  line-height: 1.1;
-  text-align: center;
+  font-size:12px;
+  line-height:1.1;
+  text-align:center;
 }
 .roof-btn.active{
-  background: #000;
-  color: #fff;
-}
-@media (max-width: 760px){
-  .roof-picks{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  background:#000;
+  color:#fff;
 }
 
-
-/* === Sofit fixes === */
-.soffit-trims {
-  display: grid;
-  grid-template-columns: 24px auto;
-  column-gap: 8px;
-  row-gap: 10px;
-  align-items: center;
-  margin-top: 6px;
+/* =========================
+   CHECKBOXES (DESKTOP BASE)
+   Важно: не трогаем обычные label полей.
+   Мы стилизуем только контейнеры с чекбоксами.
+   ========================= */
+.checks,
+.mp-fence-checks,
+.soffit-trims,
+.trims-list{
+  text-align:left;                 /* убирает "правое" ощущение */
+  justify-content:flex-start;
+  align-items:flex-start;
 }
 
-.soffit-trims label {
-  margin: 0;
-  cursor: pointer;
+/* каждая строка чекбокса */
+label.check,
+.checks label,
+.checks .check,
+.mp-fence-checks label.check,
+.soffit-trims label,
+.trims-item{
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:6px;
+  margin:0;
+  padding:0;
+  text-align:left;
 }
 
+/* сам checkbox */
+label.check input[type="checkbox"],
+.checks input[type="checkbox"],
+.mp-fence-checks input[type="checkbox"],
+.soffit-trims input[type="checkbox"],
+.trims-item input[type="checkbox"]{
+  margin:0;
+  flex:0 0 auto;
+}
 
-/* Sofit trims block */
+/* текст рядом */
+label.check span,
+.checks span,
+.mp-fence-checks span,
+.soffit-trims span,
+.trims-item span{
+  text-align:left;
+}
+
+/* =========================
+   SOFFIT SPECIFIC (DESKTOP)
+   ========================= */
+.soffit-trims{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:6px;
+}
+
+/* софиты: "доборные элементы" */
 .trims-block{
   display:flex;
   align-items:center;
@@ -375,167 +352,114 @@ select:disabled{
   flex-wrap:wrap;
 }
 .trims-item{
-  display:flex;
-  align-items:center;
-  gap:8px; /* closer label to checkbox */
-  margin:0;
   font-size:14px;
   line-height:1.2;
 }
-.trims-item input{ margin:0; }
-
-
-/* Sofit trims: keep labels on one line and closer to checkbox */
-.trims-item{ gap:6px; }
 .trims-item span{ white-space:nowrap; }
 
-
-/* Sofit result table improvements */
-.mp-table{
-  width:100%;
-  border-collapse:collapse;
-}
-.mp-table th,
-.mp-table td{
-  border:1px solid #000;
-  padding:10px 14px;
-}
-.mp-table th:nth-child(1),
-.mp-table td:nth-child(1){ width:50%; }
-.mp-table th:nth-child(2),
-.mp-table td:nth-child(2){ width:25%; }
-.mp-table th:nth-child(3),
-.mp-table td:nth-child(3){ width:25%; }
-
-
-
-
-
-
-
-
-
-
-/* Основной продукт — забор: аккуратное размещение чекбоксов */
+/* =========================
+   MAIN PRODUCT – FENCE (DESKTOP)
+   ========================= */
 #mp_fence .mp-fence-checks{
-  grid-column: 2 / 4;   /* справа от поля длины */
-  align-self: start;
-  margin-top: 0;
-  padding-top: 22px;    /* примерно высота лейбла, чтобы чекбоксы были "вровень" с надписью "Длина забора" */
-  display: flex;
-  flex-direction: row;
-  gap: 26px;
-  flex-wrap: wrap;
-}
-#mp_fence .mp-fence-checks .check{
   display:flex;
-  align-items:center;
-  gap:4px;              /* максимально близко */
-  margin:0;
-  font-size:14px;
-  line-height:1.1;
-  white-space:nowrap;   /* строго одна строка */
+  flex-wrap:wrap;
+  gap:12px 18px;
+  margin-top:0;
+  padding-top:22px; /* как у тебя было "вровень" */
 }
-#mp_fence .mp-fence-checks .check input{
-  margin:0;
-}
-#mp_fence .mp-fence-checks .check span{
-  white-space:nowrap;
-}
-
-/* мобильная версия */
-@media (max-width: 760px){
-  #mp_fence .mp-fence-checks{
-    grid-column: 1 / -1;
-    padding-top: 0;
-    gap: 12px;
-  }
-  #mp_fence .mp-fence-checks .check{
-  display:flex;
-  align-items:center;
-  gap:4px;              /* максимально близко */
-  margin:0;
-  font-size:14px;
-  line-height:1.1;
-  white-space:nowrap;   /* строго одна строка */
-}
-}
-
 
 /* =========================
-   MOBILE: fix all checkboxes alignment (all calculators)
+   RESPONSIVE
    ========================= */
 @media (max-width: 760px){
 
-  /* universal label+checkbox layout */
+  body{
+    margin:14px auto;
+    padding:0 12px;
+  }
+
+  .card{
+    padding:12px;
+    border-radius:12px;
+  }
+
+  .grid, .grid3{
+    grid-template-columns:1fr;
+    column-gap:16px;
+    row-gap:12px;
+  }
+
+  input, select{
+    max-width:100%;
+  }
+
+  #gap{ max-width:100%; }
+
+  button{ width:100%; }
+
+  .row{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:4px;
+  }
+
+  .roof-picks{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  /* ---- ВАЖНОЕ: мобильные чекбоксы ВЕЗДЕ ----
+     Делаем строку "галочка + текст" на всю ширину,
+     выравниваем слева, разрешаем перенос текста.
+  */
   label.check,
   .checks label,
   .checks .check,
   .mp-fence-checks label.check,
-  .trims-item,
-  .soffit-trims label{
-    display: flex !important;
-    align-items: flex-start !important;
-    justify-content: flex-start !important;
-    gap: 10px !important;
-    text-align: left !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
+  .soffit-trims label,
+  .trims-item{
+    display:flex;
+    width:100%;
+    align-items:flex-start;
+    justify-content:flex-start;
+    gap:8px;
+    text-align:left;
   }
 
-  /* checkbox input shouldn't add weird margins */
   label.check input[type="checkbox"],
   .checks input[type="checkbox"],
   .mp-fence-checks input[type="checkbox"],
-  .trims-item input[type="checkbox"],
-  .soffit-trims input[type="checkbox"]{
-    margin: 2px 0 0 0 !important;
-    flex: 0 0 auto !important;
+  .soffit-trims input[type="checkbox"],
+  .trims-item input[type="checkbox"]{
+    margin:2px 0 0 0;
   }
 
-  /* allow text wrap on mobile, so nothing "uезжает" */
   label.check span,
-  .checks label span,
-  .checks .check span,
-  .mp-fence-checks label.check span,
-  .trims-item span,
-  .soffit-trims label span{
-    white-space: normal !important;
-    line-height: 1.25 !important;
+  .checks span,
+  .mp-fence-checks span,
+  .soffit-trims span,
+  .trims-item span{
+    white-space:normal;    /* чтобы не уезжало */
+    line-height:1.25;
+    text-align:left;
   }
 
-  /* Sofit trims: stack items vertically */
-  .trims-block{
-    align-items: flex-start !important;
-  }
+  /* группы чекбоксов в столбик */
+  .checks,
+  #mp_fence .mp-fence-checks,
   .trims-list{
-    width: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 10px !important;
-  }
-  .trims-item{
-    white-space: normal !important;
+    display:flex;
+    flex-direction:column;
+    width:100%;
+    gap:10px;
+    padding-top:0; /* важно: убираем десктопный отступ */
   }
 
-  /* Generic checks groups: stack vertically */
-  .checks{
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 10px !important;
-  }
-
-  /* Fence checks block: stack */
-  #mp_fence .mp-fence-checks{
-    width: 100% !important;
-    flex-direction: column !important;
-    gap: 10px !important;
+  /* софиты: доборы в столбик */
+  .trims-block{
+    align-items:flex-start;
+    gap:10px;
   }
 }
 
-
-/* viewport-sanity: prevent unexpected right alignment in checkbox blocks */
-.checks, .mp-fence-checks, .trims-list, .soffit-trims{ text-align:left; }
+@media (max-width: 380px){
+  .roof-picks{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  button{ padding:10px 12px; }
+}
