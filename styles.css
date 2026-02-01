@@ -118,6 +118,7 @@ button{
     max-width: 100%;
   }
 }
+
 .hint{
   font-size: 12px;
   color: #666;
@@ -128,11 +129,13 @@ button{
   margin: 6px 0 14px;
 }
 .top-note a{ color: inherit; }
+
 select:disabled{
   background: #f0f0f0;
   color: #777;
   cursor: not-allowed;
 }
+
 .grid3{
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -156,6 +159,7 @@ select:disabled{
     grid-template-columns: 1fr;
   }
 }
+
 .section-title{
   margin: 20px 0 8px;
   font-size: 16px;
@@ -166,6 +170,7 @@ select:disabled{
   margin-top: 12px;
   margin-right: 12px;
 }
+
 .section-header{
   display: flex;
   justify-content: space-between;
@@ -193,6 +198,7 @@ select:disabled{
   background: #000;
   color: #fff;
 }
+
 /* ===== Таблица жалюзийного забора ===== */
 .table-wrap{
   overflow-x: auto;
@@ -260,6 +266,7 @@ select:disabled{
     padding: 5px 6px;
   }
 }
+
 .small-table{
   width: 100%;
   border-collapse: collapse;
@@ -339,7 +346,6 @@ select:disabled{
   .roof-picks{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-
 /* === Sofit fixes === */
 .soffit-trims {
   display: grid;
@@ -354,7 +360,6 @@ select:disabled{
   margin: 0;
   cursor: pointer;
 }
-
 
 /* Sofit trims block */
 .trims-block{
@@ -377,18 +382,13 @@ select:disabled{
 .trims-item{
   display:flex;
   align-items:center;
-  gap:8px; /* closer label to checkbox */
+  gap:6px; /* ближе к галочке */
   margin:0;
   font-size:14px;
   line-height:1.2;
 }
 .trims-item input{ margin:0; }
-
-
-/* Sofit trims: keep labels on one line and closer to checkbox */
-.trims-item{ gap:6px; }
 .trims-item span{ white-space:nowrap; }
-
 
 /* Sofit result table improvements */
 .mp-table{
@@ -406,3 +406,56 @@ select:disabled{
 .mp-table td:nth-child(2){ width:25%; }
 .mp-table th:nth-child(3),
 .mp-table td:nth-child(3){ width:25%; }
+
+/* ===== Основной продукт → Забор: чекбоксы (одна строка, текст близко) ===== */
+#mp_fence .mp-fence-checks{
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: fit-content;
+}
+
+/* ВАЖНО: используем селектор с mp-fence-checks, чтобы не затрагивать другие label */
+#mp_fence .mp-fence-checks label.check{
+  display: inline-flex;   /* не растягиваемся на всю ширину */
+  align-items: center;
+  gap: 2px;               /* максимально близко к галочке */
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.1;
+  white-space: nowrap;    /* строго одна строка */
+}
+
+#mp_fence .mp-fence-checks label.check input{
+  margin: 0;
+}
+
+#mp_fence .mp-fence-checks label.check span{
+  white-space: nowrap;
+}
+/* FIX: убираем "правое" выравнивание у чекбоксов в заборе */
+#mp_fence .mp-fence-checks,
+#mp_fence .mp-fence-checks label.check,
+#mp_fence .mp-fence-checks label.check span{
+  text-align: left !important;
+}
+
+#mp_fence .mp-fence-checks{
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+}
+
+#mp_fence .mp-fence-checks label.check{
+  display: inline-flex !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 2px !important;           /* ближе к галочке */
+  white-space: nowrap !important; /* одна строка */
+}
+
+#mp_fence .mp-fence-checks label.check input{
+  margin: 0 !important;
+}
