@@ -459,3 +459,114 @@ select:disabled{
 #mp_fence .mp-fence-checks label.check input{
   margin: 0 !important;
 }
+/* =========================
+   MOBILE OPTIMIZATION
+   вставь в конец styles.css
+   ========================= */
+@media (max-width: 760px){
+
+  body{
+    margin: 14px auto;
+    padding: 0 12px;
+  }
+
+  .card{
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  h1{ font-size: 20px; }
+  h2{ font-size: 16px; }
+  h3{ font-size: 15px; }
+
+  /* все сетки в одну колонку */
+  .grid, .grid3{
+    grid-template-columns: 1fr !important;
+    row-gap: 12px;
+    column-gap: 12px;
+  }
+
+  /* инпуты и селекты на всю ширину */
+  input, select{
+    max-width: 100% !important;
+  }
+
+  /* кнопки на всю ширину */
+  button{
+    width: 100%;
+  }
+
+  /* блок результата компактнее */
+  .out{
+    padding: 10px;
+  }
+
+  /* строки результата пусть переносятся */
+  .row{
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  /* таблицы: гарантируем горизонтальный скролл */
+  .table-wrap{
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .bom{
+    min-width: 900px; /* можно 800–1100 по вкусу */
+  }
+
+  /* софиты: доборы и подписи не "распирают" */
+  .trims-block{
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .trims-list{
+    gap: 10px;
+  }
+  .trims-item span{
+    white-space: normal; /* на мобиле лучше разрешить перенос */
+  }
+
+  /* таблица расчёта софитов: чуть плотнее */
+  .mp-table th, .mp-table td{
+    padding: 8px 10px;
+  }
+
+  /* забор (основной продукт): чекбоксы в столбик, без "разъезда" */
+  #mp_fence .mp-fence-checks{
+    width: 100%;
+    gap: 10px;
+  }
+  #mp_fence .mp-fence-checks label.check{
+    white-space: normal !important;  /* на мобиле лучше перенос */
+  }
+
+  /* кнопки выбора типа крыши (водосточка): 3 в ряд */
+  .roof-picks{
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px;
+  }
+  .roof-btn{
+    padding: 8px 6px;
+  }
+  .roof-btn img{
+    width: 38px;
+    height: 38px;
+  }
+  .roof-btn span{
+    font-size: 11px;
+  }
+}
+
+/* дополнительный брейкпоинт для очень узких экранов */
+@media (max-width: 380px){
+  .roof-picks{
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  button{
+    padding: 10px 12px;
+  }
+}
