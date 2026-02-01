@@ -535,3 +535,28 @@ select:disabled{
     gap: 10px !important;
   }
 }
+/* ===== FIX: Забор — галочки под "Длина забора" ===== */
+
+/* сам блок галочек */
+#mp_fence .mp-fence-checks{
+  grid-column: 1 / 2 !important;  /* ← ПЕРВАЯ колонка grid */
+  align-self: start;
+  margin-top: 6px;
+  width: auto;
+}
+
+/* каждая галочка */
+#mp_fence .mp-fence-checks label.check{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+/* мобильная версия */
+@media (max-width: 760px){
+  #mp_fence .mp-fence-checks{
+    grid-column: 1 / -1 !important; /* на мобиле — на всю ширину */
+    margin-top: 8px;
+  }
+}
