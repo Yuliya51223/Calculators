@@ -560,3 +560,35 @@ select:disabled{
     margin-top: 8px;
   }
 }
+/* ===== MOBILE FIX: софиты — галочка ближе к тексту ===== */
+@media (max-width: 760px){
+
+  /* контейнер доборов софитов */
+  .soffit-trims{
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  /* каждая строка с галочкой */
+  .soffit-trims label{
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 6px !important;        /* ← ВОТ ЭТО расстояние */
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+  }
+
+  /* сама галочка */
+  .soffit-trims input[type="checkbox"]{
+    margin: 2px 0 0 0 !important;
+    flex-shrink: 0;
+  }
+
+  /* текст */
+  .soffit-trims span{
+    white-space: normal !important;
+    line-height: 1.25;
+  }
+}
