@@ -1831,6 +1831,905 @@ function downloadSoffitPdf(){
 [sMaterial, sOverhang, sLength, sTrimP, sTrimJ, sTrimFacia, sTrimCorner].forEach(el => {
   el?.addEventListener('input', sReset);
   el?.addEventListener('change', sReset);
+
+
+  // ============================================================
+  // 7) ОСНОВНОЙ КАЛЬКУЛЯТОР ПРОДУКЦИИ (Кровля/Забор/Фасад)
+  // ============================================================
+  const mpType = document.getElementById('mp_type');
+  const mpRoof = document.getElementById('mp_roof');
+  const mpFence = document.getElementById('mp_fence');
+  const mpFacade = document.getElementById('mp_facade');
+
+  // --- справочники ширины (мм) ---
+  const WIDTH_WORK_MM = {
+    // Профнастил (кровля/забор/фасад)
+    'С8': 1150,
+    'НС16': 1100,
+    'С20': 1100,
+    'К20': 1130,
+    'С21': 1000,
+    'НС35': 1000,
+    'Н60': 845,
+    'Н75': 750,
+
+    // Фальц
+    'Двойной стоячий': 550,
+
+    // Металлочерепица (по вашим размерам)
+    'Супермонтеррей/Феникс': 1100,
+    'Геркулес/Орион': 1150,
+    'Каскад/Пегас': 1130,
+    // Дюна/Лира: рабочая ширина часто 1040 мм (см. тех.описания профиля «Дюна»)
+    'Дюна/Лира': 1040,
+
+    // Сайдинг
+    'Корабельная доска': 236,
+    'Евробрус': 340,
+    'Блок-хаус': 355,
+    'Л-брус': 240,
+    'ЛайнПро': 176,
+
+    // Штакетник (ширина планки)
+    'Европланка': 126,
+    'Евротрапеция': 117,
+    'Европланка Престиж': 131,
+    'М-образный Престиж': 118,
+  };
+
+  // --- общая (полная) ширина (мм) ---
+  const WIDTH_TOTAL_MM = {
+    // Профнастил
+    'С8': 1200,
+    'НС16': 1150,
+    'С20': 1150,
+    'К20': 1195,
+    'С21': 1051,
+    'НС35': 1060,
+    'Н60': 902,
+    'Н75': 800,
+
+    // Фальц
+    'Двойной стоячий': 562,
+
+    // Металлочерепица
+    'Супермонтеррей/Феникс': 1180,
+    'Геркулес/Орион': 1200,
+    'Каскад/Пегас': 1195,
+    'Дюна/Лира': 1180,
+
+    // Сайдинг
+    'Корабельная доска': 267,
+    'Евробрус': 359,
+    'Блок-хаус': 383,
+    'Л-брус': 264,
+    'ЛайнПро': 200,
+
+    // Штакетник
+    'Европланка': 126,
+    'Евротрапеция': 117,
+    'Европланка Престиж': 131,
+    'М-образный Престиж': 118,
+  };
+
+
+  const ROOF_PROFILES = {
+    profnastil: ['К20','С20','С21','НС35','Н60','Н75'],
+    tile: ['Супермонтеррей/Феникс','Геркулес/Орион','Каскад/Пегас','Дюна/Лира'],
+    falz: ['Двойной стоячий'],
+  };
+
+  const FENCE_PROFILES = {
+    profnastil: ['С8','НС16','К20','С20','С21'],
+    shtaketnik: ['Европланка','Евротрапеция','Европланка Престиж','М-образный Престиж'],
+  };
+
+  const FACADE_PROFILES = {
+    profnastil: ['С8','НС16'],
+    siding: ['Корабельная доска','Евробрус','Блок-хаус','Л-брус','ЛайнПро'],
+  };
+
+  function n(v){
+    const x = Number(v);
+    return Number.isFinite(x) ? x : 0;
+  }
+  function ceil(v){ return Math.ceil(v - 1e-9); }
+  function fmt(v, d=2){
+    const x = Number(v);
+    if (!Number.isFinite(x)) return '—';
+    return x.toFixed(d).replace('.', ',');
+  }
+  function fmtInt(v){
+    const x = Number(v);
+    if (!Number.isFinite(x)) return '—';
+    return String(Math.round(x));
+  }
+  function workWidthM(key){
+    const mm = WIDTH_WORK_MM[key];
+    return mm ? (mm/1000) : 0;
+  }
+  function totalWidthM(key){
+    const mm = WIDTH_TOTAL_MM[key];
+    return mm ? (mm/1000) : 0;
+  }
+
+  // --- переключение типа расчёта ---
+  function mpShowBlock(){
+    const t = mpType?.value || '';
+    mpRoof?.classList.toggle('hidden', t !== 'roof');
+    mpFence?.classList.toggle('hidden', t !== 'fence');
+    mpFacade?.classList.toggle('hidden', t !== 'facade');
+  }
+  mpType?.addEventListener('change', mpShowBlock);
+  mpShowBlock();
+
+  // ===================== КРОВЛЯ =====================
+  const rRidge = document.getElementById('r_ridge');
+  const rSlopeLen = document.getElementById('r_slopeLen');
+  const rSlopes = document.getElementById('r_slopes');
+  const rMaterial = document.getElementById('r_material');
+  const rProfileWrap = document.getElementById('r_profile_wrap');
+  const rProfile = document.getElementById('r_profile');
+  const rPrice = document.getElementById('r_price');
+  const rAddTrims = document.getElementById('r_addTrims');
+  const rTrims = document.getElementById('r_trims');
+  const rTrimLen = document.getElementById('r_trimLen');
+  const rCalcBtn = document.getElementById('r_calc');
+  const rSplitBtn = document.getElementById('r_split');
+  const rPdfBtn = document.getElementById('r_pdf');
+  const rResult = document.getElementById('r_result');
+  const rErr = document.getElementById('r_err');
+
+  let roofLast = null;
+  let roofSplit = false;
+
+  function fillSelect(sel, items, placeholder='— выберите —'){
+    if (!sel) return;
+    sel.innerHTML = `<option value="">${placeholder}</option>` + items.map(x=>`<option value="${x}">${x}</option>`).join('');
+  }
+
+  function roofRenderProfile(){
+    const mat = rMaterial?.value;
+    const list = ROOF_PROFILES[mat] || [];
+    rProfileWrap?.classList.toggle('hidden', !mat);
+    fillSelect(rProfile, list);
+  }
+  rMaterial?.addEventListener('change', () => {
+    roofRenderProfile();
+    rErr.textContent='';
+    roofSplit = false;
+    rSplitBtn?.classList.add('hidden');
+    rPdfBtn?.classList.add('hidden');
+    rResult.innerHTML='';
+  });
+  roofRenderProfile();
+
+  rAddTrims?.addEventListener('click', () => {
+    rTrims?.classList.toggle('hidden');
+  });
+
+  function roofCompute(){
+    const ridge = n(rRidge?.value);
+    const slope = n(rSlopeLen?.value);
+    const slopes = n(rSlopes?.value || 1);
+    const mat = rMaterial?.value || '';
+    const prof = rProfile?.value || '';
+    const price = n(rPrice?.value);
+    const w = workWidthM(prof);
+
+    if (!(ridge>0) || !(slope>0) || !(slopes===1 || slopes===2)) return {err:'Заполните длину по коньку, длину ската и количество скатов.'};
+    if (!mat || !prof) return {err:'Выберите материал и профиль.'};
+    if (!(w>0)) return {err:'Не найдена рабочая ширина для выбранного профиля.'};
+
+    const sheetsPerSlope = ceil(ridge / w);
+    const sheets = sheetsPerSlope * slopes;
+    const area = ridge * slope * slopes;
+    const tw = totalWidthM(prof);
+    // стоимость: кол-во листов * общая ширина * длина листа * цена (₽/м²)
+    const sum = (price>0 && tw>0) ? (sheets * tw * slope * price) : null;
+
+    // доборы
+    const trimsOn = rTrims && !rTrims.classList.contains('hidden');
+    let trims = null;
+    if (trimsOn){
+      const L = n(rTrimLen?.value);
+      const eff = Math.max(0.1, L - 0.1);
+      const ridgeQty = ceil(ridge / eff);
+      const endFactor = slopes===1 ? 2 : 4;
+      const eaveFactor = slopes===1 ? 1 : 2;
+      const gableQty = ceil((slope * endFactor) / eff);
+      const eaveQty = ceil((ridge * eaveFactor) / eff);
+      trims = {
+        len: L,
+        eff,
+        items: [
+          {name:'Конёк', qty: ridgeQty, len: L},
+          {name:'Торцевая планка', qty: gableQty, len: L},
+          {name:'Карнизная планка', qty: eaveQty, len: L},
+        ]
+      };
+    }
+
+    return {ridge,slope,slopes,mat,prof,w,sheetsPerSlope,sheets,area,sum,trims};
+  }
+
+  function roofRender(data){
+    if (!rResult) return;
+    const lines = [];
+    lines.push(`<div class="mp-summary"><b>Профиль:</b> ${data.prof} (раб. ширина ${fmt(data.w,3)} м)</div>`);
+    // Кол-во листов
+    if (!roofSplit){
+      lines.push(`<div class="mp-summary"><b>Количество листов:</b> ${fmtInt(data.sheets)} шт</div>`);
+    } else {
+      lines.push(`<div class="mp-summary"><b>Количество листов (верхний ряд):</b> ${fmtInt(data.sheets)} шт</div>`);
+      lines.push(`<div class="mp-summary"><b>Количество листов (нижний ряд):</b> ${fmtInt(data.sheets)} шт</div>`);
+    }
+
+    if (!roofSplit){
+      lines.push(`<div class="mp-summary"><b>Длина листов:</b> ${fmt(data.slope)} м</div>`);
+    } else {
+      const half = data.slope/2;
+      const top = half + 0.15;
+      const bottom = half;
+      lines.push(`<div class="mp-summary"><b>Длина листов (разделение с нахлёстом 15 см):</b> верхний ${fmt(top)} м, нижний ${fmt(bottom)} м</div>`);
+    }
+
+    lines.push(`<div class="mp-summary"><b>Площадь:</b> ${fmt(data.area)} м²</div>`);
+    if (data.sum!==null) lines.push(`<div class="mp-summary"><b>Стоимость:</b> ${fmt(data.sum,0)} ₽</div>`);
+
+    if (data.trims){
+      const rows = data.trims.items.map(it => `<tr><td>${it.name}</td><td>${fmtInt(it.qty)} шт</td><td>${fmt(it.len,0)} м</td></tr>`).join('');
+      lines.push(`
+        <div style="margin-top:10px;"><b>Доборные элементы</b></div>
+        <table class="mp-table">
+          <thead><tr><th>Элемент</th><th>Кол-во</th><th>Длина</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `);
+    }
+
+    rResult.innerHTML = lines.join('<br>');
+  }
+
+  function roofCalc(){
+    rErr.textContent='';
+    const data = roofCompute();
+    if (data.err){ rErr.textContent=data.err; return; }
+    roofLast = data;
+    roofSplit = false;
+    roofRender(data);
+    rSplitBtn?.classList.remove('hidden');
+    rPdfBtn?.classList.remove('hidden');
+  }
+  rCalcBtn?.addEventListener('click', roofCalc);
+
+  rSplitBtn?.addEventListener('click', () => {
+    if (!roofLast) return;
+    roofSplit = true;
+    roofRender(roofLast);
+  });
+
+  function pdfDoc(){
+    const jsPDF = window.jspdf?.jsPDF;
+    return jsPDF ? new jsPDF({orientation:'portrait', unit:'mm', format:'a4'}) : null;
+  }
+
+  function pdfSetFont(doc){
+    // Используем тот же шрифт, что и в других калькуляторах, если доступен
+    try{
+      let fontB64 = window.__PDF_FONT_MONTSERRAT__;
+      if (fontB64){
+        fontB64 = fontB64.replace(/\s+/g,'');
+        doc.addFileToVFS('Montserrat-Regular.ttf', fontB64);
+        doc.addFont('Montserrat-Regular.ttf','Montserrat','normal');
+        doc.setFont('Montserrat','normal');
+      }
+    }catch(e){}
+  }
+
+  function downloadRoofPdf(){
+    if (!roofLast) return;
+    const doc = pdfDoc();
+    if (!doc){ rErr.textContent='PDF не может быть создан: jsPDF не загружен'; return; }
+    pdfSetFont(doc);
+    doc.setFontSize(14);
+    doc.text('Расчёт кровли', 14, 14);
+    doc.setFontSize(11);
+
+    const y0 = 24;
+    let y = y0;
+    const add = (label, value) => { doc.text(`${label}: ${value}`, 14, y); y += 7; };
+
+    add('Профиль', `${roofLast.prof} (раб. ширина ${fmt(roofLast.w,3)} м)`);
+    add('Длина по коньку', `${fmt(roofLast.ridge)} м`);
+    add('Длина ската', `${fmt(roofLast.slope)} м`);
+    add('Количество скатов', `${roofLast.slopes}`);
+    add('Материал', roofLast.mat==='profnastil' ? 'Профнастил' : (roofLast.mat==='tile' ? 'Металлочерепица' : 'Фальц'));
+    if (roofLast.sum!==null) add('Цена', `${fmt(n(document.getElementById('r_price')?.value),0)} ₽/м²`);
+    if (!roofSplit){
+      add('Количество листов', `${fmtInt(roofLast.sheets)} шт`);
+    } else {
+      add('Количество листов (верх)', `${fmtInt(roofLast.sheets)} шт`);
+      add('Количество листов (низ)', `${fmtInt(roofLast.sheets)} шт`);
+    }
+    add('Площадь', `${fmt(roofLast.area)} м²`);
+    if (roofLast.sum!==null) add('Стоимость', `${fmt(roofLast.sum,0)} ₽`);
+
+    if (roofSplit){
+      const half = roofLast.slope/2;
+      add('Разделение ската', `верх ${fmt(half+0.15)} м, низ ${fmt(half)} м (нахлёст 0,15 м)`);
+    }
+
+    if (roofLast.trims && doc.autoTable){
+      y += 2;
+      doc.autoTable({
+        startY: y,
+        head: [['Доборный элемент','Кол-во, шт','Длина, м']],
+        body: roofLast.trims.items.map(it=>[it.name, String(it.qty), String(it.len)]),
+        theme: 'grid',
+        styles: {font: (doc.getFont().fontName || 'helvetica'), fontSize: 9, cellPadding: 2},
+        headStyles: {fillColor: [230,230,230]}
+      });
+    }
+
+    doc.save('roof_calc.pdf');
+  }
+  rPdfBtn?.addEventListener('click', downloadRoofPdf);
+
+  // ===================== ЗАБОР =====================
+  const fLenWrap = document.getElementById('f_len_wrap');
+  const fAreaWrap = document.getElementById('f_area_wrap');
+  const fLength = document.getElementById('f_length');
+  const fArea = document.getElementById('f_area');
+  const fHeight = document.getElementById('f_height');
+  const fMaterial = document.getElementById('f_material');
+  const fProfileWrap = document.getElementById('f_profile_wrap');
+  const fProfile = document.getElementById('f_profile');
+  const fPriceM2Wrap = document.getElementById('f_price_m2_wrap');
+  const fPriceM2 = document.getElementById('f_price_m2');
+  const fGapWrap = document.getElementById('f_gap_wrap');
+  const fGap = document.getElementById('f_gap');
+  const fPriceLmWrap = document.getElementById('f_price_lm_wrap');
+  const fPriceLm = document.getElementById('f_price_lm');
+  const fUseArea = document.getElementById('f_useArea');
+  const fPipes = document.getElementById('f_pipes');
+  const fPipesBlock = document.getElementById('f_pipes_block');
+  const fDepth = document.getElementById('f_depth');
+  const fStep = document.getElementById('f_step');
+  const fLags = document.getElementById('f_lags');
+  const fPipeSize = document.getElementById('f_pipeSize');
+  const fCaps = document.getElementById('f_caps');
+  const fScrews = document.getElementById('f_screws');
+  const fCalcBtn = document.getElementById('f_calc');
+  const fPdfBtn = document.getElementById('f_pdf');
+  const fResult = document.getElementById('f_result');
+  const fErr = document.getElementById('f_err');
+
+  let fenceLast = null;
+
+  function fenceRenderFields(){
+    const mat = fMaterial?.value || '';
+    fProfileWrap?.classList.toggle('hidden', !mat);
+    fillSelect(fProfile, (FENCE_PROFILES[mat]||[]));
+
+    const isProf = mat==='profnastil';
+    const isSht = mat==='shtaketnik';
+    fPriceM2Wrap?.classList.toggle('hidden', !isProf);
+    fGapWrap?.classList.toggle('hidden', !isSht);
+    fPriceLmWrap?.classList.toggle('hidden', !isSht);
+  }
+  fMaterial?.addEventListener('change', () => { fenceRenderFields(); fErr.textContent=''; fResult.innerHTML=''; fPdfBtn.classList.add('hidden'); });
+  fenceRenderFields();
+
+  function fenceToggleLengthMode(){
+    const useArea = !!fUseArea?.checked;
+    fLenWrap?.classList.toggle('hidden', useArea);
+    fAreaWrap?.classList.toggle('hidden', !useArea);
+  }
+  fUseArea?.addEventListener('change', fenceToggleLengthMode);
+  fenceToggleLengthMode();
+
+  fPipes?.addEventListener('change', () => {
+    fPipesBlock?.classList.toggle('hidden', !fPipes.checked);
+  });
+
+  function fenceCompute(){
+    const useArea = !!fUseArea?.checked;
+    let length = useArea ? 0 : n(fLength?.value);
+    const areaSot = useArea ? n(fArea?.value) : 0;
+    const height = n(fHeight?.value);
+    const mat = fMaterial?.value || '';
+    const prof = fProfile?.value || '';
+
+    if (useArea){
+      if (!(areaSot>0)) return {err:'Укажите площадь участка (сот).'};
+      length = 4 * Math.sqrt(areaSot * 100);
+    }
+
+    if (!(length>0) || !(height>0)) return {err:'Укажите длину и высоту забора.'};
+    if (!mat || !prof) return {err:'Выберите материал и профиль.'};
+
+    let sheets = 0;
+    let unitCost = null;
+    let sum = null;
+
+    if (mat==='profnastil'){
+      const w = workWidthM(prof);
+      const tw = totalWidthM(prof);
+      if (!(w>0)) return {err:'Не найдена рабочая ширина для профнастила.'};
+      if (!(tw>0)) return {err:'Не найдена общая ширина для профнастила.'};
+      sheets = ceil(length / w);
+      unitCost = {type:'m2', price:n(fPriceM2?.value)};
+      sum = (unitCost.price>0) ? (sheets * tw * height * unitCost.price) : null;
+    } else {
+      const plankW = (WIDTH_WORK_MM[prof]||0)/1000;
+      const gapM = n(fGap?.value)/100;
+      if (!(plankW>0)) return {err:'Не найдена ширина планки штакетника.'};
+      sheets = ceil(length / (plankW + gapM));
+      unitCost = {type:'lm', price:n(fPriceLm?.value)};
+      sum = unitCost.price>0 ? (height * unitCost.price * sheets) : null;
+    }
+
+    const pipesOn = !!fPipes?.checked;
+    let pipes = null;
+    if (pipesOn){
+      const depth = n(fDepth?.value);
+      const step = n(fStep?.value);
+      const lags = n(fLags?.value);
+      const pipeSize = fPipeSize?.value || '';
+      const posts = ceil(length/step) + 1;
+      const postMeters = posts * (height + depth);
+      const postPcs6 = ceil(postMeters / 6);
+      const lagMeters = length * lags;
+      const lagPcs6 = ceil(lagMeters / 6);
+      const caps = fCaps?.checked ? posts : 0;
+
+      let screws = 0;
+      if (fScrews?.checked){
+        if (mat==='profnastil') screws = 12 * sheets;
+        else screws = (prof==='М-образный Престиж') ? (2*sheets) : (4*sheets);
+      }
+
+      pipes = {depth, step, lags, pipeSize, posts, postPcs6, lagPcs6, caps, screws};
+    }
+
+    return {useArea, areaSot, length, height, mat, prof, sheets, unitCost, sum, pipes};
+  }
+
+  function fenceRender(data){
+    const lines=[];
+    if (data.useArea){
+      lines.push(`<div class="mp-summary"><b>Расчётная длина забора:</b> ${fmt(data.length)} м</div>`);
+    }
+    lines.push(`<div class="mp-summary"><b>Профиль:</b> ${data.prof}</div>`);
+    lines.push(`<div class="mp-summary"><b>Количество листов/планок:</b> ${fmtInt(data.sheets)} шт</div>`);
+    lines.push(`<div class="mp-summary"><b>Длина элементов:</b> ${fmt(data.height)} м</div>`);
+    if (data.sum!==null) lines.push(`<div class="mp-summary"><b>Стоимость:</b> ${fmt(data.sum,0)} ₽</div>`);
+
+    if (data.pipes){
+      const p=data.pipes;
+      const rows=[
+        ['Проф труба на столбы', `${p.pipeSize} (6 м)`, `${fmtInt(p.postPcs6)} шт`],
+        ['Проф труба на лаги', `6 м`, `${fmtInt(p.lagPcs6)} шт`],
+        ['Столбы (точки)', '—', `${fmtInt(p.posts)} шт`],
+      ];
+      if (p.caps) rows.push(['Заглушки', '—', `${fmtInt(p.caps)} шт`]);
+      if (p.screws) rows.push(['Саморезы', '—', `${fmtInt(p.screws)} шт`]);
+      lines.push(`
+        <div style="margin-top:10px;"><b>Проф трубы и комплектующие</b></div>
+        <table class="mp-table">
+          <thead><tr><th>Позиция</th><th>Размер/длина</th><th>Кол-во</th></tr></thead>
+          <tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody>
+        </table>
+      `);
+    }
+
+    fResult.innerHTML = lines.join('<br>');
+  }
+
+  function fenceCalc(){
+    fErr.textContent='';
+    const data = fenceCompute();
+    if (data.err){ fErr.textContent=data.err; return; }
+    fenceLast = data;
+    fenceRender(data);
+    fPdfBtn?.classList.remove('hidden');
+  }
+  fCalcBtn?.addEventListener('click', fenceCalc);
+
+  function downloadFencePdf(){
+    if (!fenceLast) return;
+    const doc = pdfDoc();
+    if (!doc){ fErr.textContent='PDF не может быть создан: jsPDF не загружен'; return; }
+    pdfSetFont(doc);
+    doc.setFontSize(14);
+    doc.text('Расчёт забора', 14, 14);
+    doc.setFontSize(11);
+    let y=24;
+    const add=(l,v)=>{ doc.text(`${l}: ${v}`,14,y); y+=7; };
+
+    // Вводные данные
+    add('Материал', fenceLast.mat==='profnastil' ? 'Профнастил' : 'Штакетник');
+    if (fenceLast.useArea) add('Площадь участка', `${fmt(fenceLast.areaSot)} сот`);
+    add('Длина забора', `${fmt(fenceLast.length)} м`);
+    add('Высота забора', `${fmt(fenceLast.height)} м`);
+    add('Профиль', fenceLast.prof);
+
+    if (fenceLast.mat==='profnastil'){
+      const ww = workWidthM(fenceLast.prof);
+      const tw = totalWidthM(fenceLast.prof);
+      if (ww>0) add('Рабочая ширина листа', `${fmt(ww,3)} м`);
+      if (tw>0) add('Общая ширина листа', `${fmt(tw,3)} м`);
+      if (fenceLast.unitCost?.price>0) add('Стоимость', `${fmt(fenceLast.unitCost.price,0)} ₽/м²`);
+    } else {
+      const plankW = (WIDTH_WORK_MM[fenceLast.prof]||0)/1000;
+      const gapM = n(document.getElementById('f_gap')?.value)/100; // текущее значение в форме
+      if (plankW>0) add('Ширина планки', `${fmt(plankW,3)} м`);
+      if (gapM>0) add('Зазор', `${fmt(gapM*100,0)} см`);
+      if (fenceLast.unitCost?.price>0) add('Стоимость', `${fmt(fenceLast.unitCost.price,0)} ₽/пог.м`);
+    }
+
+    y += 2;
+    add('Кол-во листов/планок', `${fmtInt(fenceLast.sheets)} шт`);
+    add('Длина листа/планки', `${fmt(fenceLast.height)} м`);
+    if (fenceLast.sum!==null) add('Итого стоимость', `${fmt(fenceLast.sum,0)} ₽`);
+
+    // Проф трубы (если выбрано)
+    if (fenceLast.pipes){
+      y += 4;
+      add('Посчитать профтрубы', 'Да');
+      add('Заглубление', `${fmt(fenceLast.pipes.depth)} м`);
+      add('Шаг столбов', `${fmt(fenceLast.pipes.step)} м`);
+      add('Кол-во лаг', `${fmtInt(fenceLast.pipes.lags)}`);
+      add('Труба на столб', fenceLast.pipes.pipeSize);
+
+      if (doc.autoTable){
+        y += 2;
+        const p=fenceLast.pipes;
+        const body=[
+          ['Проф труба на столбы', `${p.pipeSize} (6 м)`, String(p.postPcs6)],
+          ['Проф труба на лаги', `6 м`, String(p.lagPcs6)],
+          ['Заглушки на столбы', `шт`, String(p.caps||0)],
+          ['Саморезы', `шт`, String(p.screws||0)],
+        ];
+        doc.autoTable({
+          startY: y,
+          head: [['Позиция','Размер/длина','Кол-во']],
+          body,
+          theme: 'grid',
+          styles: {font: (doc.getFont().fontName || 'helvetica'), fontSize: 9, cellPadding: 2},
+          headStyles: {fillColor: [245,245,245], textColor: 20},
+          margin: {left: 14, right: 14}
+        });
+      }
+    } else {
+      add('Посчитать профтрубы', 'Нет');
+    }
+
+    doc.save('raschet-zabora.pdf');
+  }
+  fPdfBtn?.addEventListener('click', downloadFencePdf);
+
+  // ===================== ФАСАД =====================
+  const faWalls = document.getElementById('fa_walls');
+  const faAddWall = document.getElementById('fa_addWall');
+  const faCalcBtn = document.getElementById('fa_calc');
+  const faPdfBtn = document.getElementById('fa_pdf');
+  const faResult = document.getElementById('fa_result');
+  const faErr = document.getElementById('fa_err');
+
+  let facadeLast = null;
+
+  function wallTemplate(i){
+    return `
+    <div class="mp-wall" data-wall="${i}">
+      <div class="mp-wall__head">
+        <div><b>Стена ${i+1}</b></div>
+        <div class="mp-wall__btns">
+          ${i===0?'':'<button type="button" class="mp-wall-del">Удалить</button>'}
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label>Высота стены (м)</label>
+          <input type="number" class="fa_h" min="0" step="0.01" value="0">
+        </div>
+        <div>
+          <label>Длина стены (м) <span class="hint-inline">0,4–6 м</span></label>
+          <input type="number" class="fa_l" min="0.4" max="6" step="0.01" value="0.4">
+        </div>
+        <div>
+          <label>Стоимость (₽/м²)</label>
+          <input type="number" class="fa_price" min="0" step="1" value="0">
+        </div>
+        <div>
+          <label>Материал</label>
+          <select class="fa_mat">
+            <option value="">— выберите —</option>
+            <option value="profnastil">Профнастил</option>
+            <option value="siding">Сайдинг</option>
+          </select>
+        </div>
+        <div class="fa_prof_wrap hidden">
+          <label>Профиль</label>
+          <select class="fa_prof"></select>
+        </div>
+        <div class="fa_layout_wrap hidden">
+          <label>Раскладка сайдинга</label>
+          <select class="fa_layout">
+            <option value="h">Горизонтально</option>
+            <option value="v">Вертикально</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="button" class="fa_addTrims">Добавить доборные элементы</button>
+      <div class="mp-subblock fa_trims hidden">
+        <div class="grid">
+          <div>
+            <label>Длина доборных элементов</label>
+            <select class="fa_trimLen">
+              <option value="2">2 м</option>
+              <option value="3">3 м</option>
+            </select>
+          </div>
+          <div>
+            <label>Количество внешних углов</label>
+            <input type="number" class="fa_outCorners" min="0" step="1" value="0">
+          </div>
+          <div>
+            <label>Количество внутренних углов</label>
+            <input type="number" class="fa_inCorners" min="0" step="1" value="0">
+          </div>
+          <div></div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function facadeBindWall(wrap){
+    const matSel = wrap.querySelector('.fa_mat');
+    const profWrap = wrap.querySelector('.fa_prof_wrap');
+    const profSel = wrap.querySelector('.fa_prof');
+    const layoutWrap = wrap.querySelector('.fa_layout_wrap');
+
+    function render(){
+      const mat = matSel.value;
+      profWrap.classList.toggle('hidden', !mat);
+      const list = FACADE_PROFILES[mat] || [];
+      profSel.innerHTML = '<option value="">— выберите —</option>' + list.map(x=>`<option value="${x}">${x}</option>`).join('');
+      layoutWrap.classList.toggle('hidden', mat !== 'siding');
+    }
+    matSel.addEventListener('change', render);
+    render();
+
+    wrap.querySelector('.fa_addTrims').addEventListener('click', () => {
+      wrap.querySelector('.fa_trims').classList.toggle('hidden');
+    });
+  }
+
+  function facadeRenderWalls(){
+    const walls = Array.from(faWalls.querySelectorAll('.mp-wall'));
+    walls.forEach((w, i) => {
+      w.querySelector('b').textContent = `Стена ${i+1}`;
+      const btns = w.querySelector('.mp-wall__btns');
+      const del = w.querySelector('.mp-wall-del');
+      if (i===0){
+        if (del) del.remove();
+      } else {
+        if (!del && btns){
+          btns.insertAdjacentHTML('beforeend', '<button type="button" class="mp-wall-del">Удалить</button>');
+          const newDel = btns.querySelector('.mp-wall-del');
+          newDel.addEventListener('click', () => { w.remove(); facadeRenderWalls(); });
+        }
+      }
+    });
+  }
+
+  function facadeAddWall(){
+    const i = faWalls.querySelectorAll('.mp-wall').length;
+    faWalls.insertAdjacentHTML('beforeend', wallTemplate(i));
+    const wrap = faWalls.querySelectorAll('.mp-wall')[i];
+    facadeBindWall(wrap);
+    const delBtn = wrap.querySelector('.mp-wall-del');
+    if (delBtn){
+      delBtn.addEventListener('click', () => {
+        wrap.remove();
+        facadeRenderWalls();
+      });
+    }
+    facadeRenderWalls();
+  }
+
+  if (faAddWall) faAddWall.onclick = facadeAddWall;
+  // init walls
+  if (faWalls && faWalls.children.length===0) facadeAddWall();
+
+  function facadeCompute(){
+    const walls = Array.from(faWalls.querySelectorAll('.mp-wall'));
+    if (!walls.length) return {err:'Нет стен для расчёта.'};
+
+    const out = [];
+    let totalSum = 0;
+    let totalArea = 0;
+
+    for (const w of walls){
+      const h = n(w.querySelector('.fa_h').value);
+      const L = n(w.querySelector('.fa_l').value);
+      const price = n(w.querySelector('.fa_price').value);
+      const mat = w.querySelector('.fa_mat').value;
+      const prof = w.querySelector('.fa_prof').value;
+      const layout = (w.querySelector('.fa_layout')?.value || 'h');
+
+      if (!(h>0) || !(L>=0.4 && L<=6)) return {err:'Проверьте высоту и длину (0,4–6 м) у каждой стены.'};
+      if (!mat || !prof) return {err:'Выберите материал и профиль у каждой стены.'};
+
+      const ww = workWidthM(prof);
+      if (!(ww>0)) return {err:`Не найдена рабочая ширина для профиля: ${prof}`};
+
+      let sheets = 0;
+      let sheetLen = 0;
+      if (mat==='profnastil'){
+        sheets = ceil(L / ww);
+        sheetLen = h;
+      } else {
+        if (layout==='h'){
+          sheets = ceil(h / ww);
+          sheetLen = L;
+        } else {
+          sheets = ceil(L / ww);
+          sheetLen = h;
+        }
+      }
+
+      const area = h * L;
+      const tw = totalWidthM(prof);
+      const sum = (price>0 && tw>0) ? (sheets * tw * sheetLen * price) : 0;
+      totalSum += sum;
+      totalArea += area;
+
+      const trimsOn = !w.querySelector('.fa_trims').classList.contains('hidden');
+      let trims = null;
+      if (trimsOn){
+        const tl = n(w.querySelector('.fa_trimLen').value);
+        const outCorners = n(w.querySelector('.fa_outCorners').value);
+        const inCorners = n(w.querySelector('.fa_inCorners').value);
+        const startQty = ceil(L / tl);
+        const finishQty = ceil(L / tl);
+        const outQty = ceil((h / tl) * outCorners);
+        const inQty = ceil((h / tl) * inCorners);
+        trims = {
+          len: tl,
+          items: [
+            {name:'Начальная планка', qty:startQty, len:tl},
+            {name:'Завершающая планка', qty:finishQty, len:tl},
+            {name:'Угловая планка внешняя', qty:outQty, len:tl},
+            {name:'Угловая планка внутренняя', qty:inQty, len:tl},
+          ]
+        };
+      }
+
+      out.push({h,L,price,mat,prof,layout,ww,sheets,sheetLen,area,sum,trims});
+    }
+
+    return {walls: out, totalArea, totalSum};
+  }
+
+  function facadeRender(data){
+    const blocks = [];
+    data.walls.forEach((w, i) => {
+      const rows = w.trims ? w.trims.items.map(it=>`<tr><td>${it.name}</td><td>${fmtInt(it.qty)} шт</td><td>${fmt(it.len,0)} м</td></tr>`).join('') : '';
+      blocks.push(`
+        <div class="mp-wall-res">
+          <div><b>Стена ${i+1}</b></div>
+          <div class="mp-summary">Профиль: ${w.prof} (раб. ширина ${fmt(w.ww,3)} м)</div>
+          <div class="mp-summary">Кол-во листов: ${fmtInt(w.sheets)} шт</div>
+          <div class="mp-summary">Длина листов: ${fmt(w.sheetLen)} м</div>
+          <div class="mp-summary">Площадь: ${fmt(w.area)} м²</div>
+          ${w.sum?`<div class="mp-summary">Стоимость: ${fmt(w.sum,0)} ₽</div>`:''}
+          ${w.trims?(
+            `<div style="margin-top:10px;"><b>Доборные элементы</b></div>
+             <table class="mp-table"><thead><tr><th>Элемент</th><th>Кол-во</th><th>Длина</th></tr></thead><tbody>${rows}</tbody></table>`
+          ):''}
+        </div>
+      `);
+    });
+
+    blocks.push(`<div class="mp-total"><b>Итого площадь:</b> ${fmt(data.totalArea)} м² ${data.totalSum?`&nbsp;&nbsp; <b>Итого стоимость:</b> ${fmt(data.totalSum,0)} ₽`:''}</div>`);
+    faResult.innerHTML = blocks.join('<br>');
+  }
+
+  function facadeCalc(){
+    faErr.textContent='';
+    const data = facadeCompute();
+    if (data.err){ faErr.textContent=data.err; return; }
+    facadeLast = data;
+    facadeRender(data);
+    faPdfBtn?.classList.remove('hidden');
+  }
+  if (faCalcBtn) faCalcBtn.onclick = facadeCalc;
+
+  function downloadFacadePdf(){
+    if (!facadeLast) return;
+    const doc = pdfDoc();
+    if (!doc){ faErr.textContent='PDF не может быть создан: jsPDF не загружен'; return; }
+    pdfSetFont(doc);
+    doc.setFontSize(14);
+    doc.text('Расчёт фасада', 14, 14);
+    doc.setFontSize(11);
+    let y=24;
+
+    // Итоги
+    doc.text(`Итого площадь: ${fmt(facadeLast.totalArea)} м²`, 14, y); y+=7;
+    doc.text(`Итого стоимость: ${fmt(facadeLast.totalSum||0,0)} ₽`, 14, y); y+=9;
+
+    // Вводные данные по стенам
+    if (doc.autoTable){
+      const body = [];
+      facadeLast.walls.forEach((w,i)=>{
+        const matName = w.mat==='profnastil' ? 'Профнастил' : 'Сайдинг';
+        const layoutName = (w.mat==='siding') ? (w.layout==='h' ? 'Горизонтально' : 'Вертикально') : '—';
+        body.push([
+          `Стена ${i+1}`,
+          matName,
+          w.prof,
+          layoutName,
+          fmt(w.h),
+          fmt(w.L),
+          w.price>0 ? fmt(w.price,0) : '—',
+          fmtInt(w.sheets),
+          fmt(w.sheetLen),
+          fmt(w.area),
+          w.sum>0 ? fmt(w.sum,0) : '—'
+        ]);
+      });
+
+      doc.autoTable({
+        startY: y,
+        head: [['Стена','Материал','Профиль','Раскладка','Высота, м','Длина, м','Цена','Листов, шт','Длина листа, м','Площадь, м²','Сумма, ₽']],
+        body,
+        theme: 'grid',
+        styles: {font: (doc.getFont().fontName || 'helvetica'), fontSize: 8, cellPadding: 2},
+        headStyles: {fillColor: [245,245,245], textColor: 20},
+        margin: {left: 14, right: 14}
+      });
+
+      y = doc.lastAutoTable.finalY + 8;
+
+      // Доборные элементы (если есть)
+      const trimsRows = [];
+      facadeLast.walls.forEach((w,i)=>{
+        if (!w.trims) return;
+        w.trims.items.forEach(it=>{
+          trimsRows.push([`Стена ${i+1}`, it.name, fmtInt(it.qty), fmt(it.len,0)]);
+        });
+      });
+
+      if (trimsRows.length){
+        doc.text('Доборные элементы', 14, y); y+=6;
+        doc.autoTable({
+          startY: y,
+          head: [['Стена','Элемент','Кол-во, шт','Длина, м']],
+          body: trimsRows,
+          theme: 'grid',
+          styles: {font: (doc.getFont().fontName || 'helvetica'), fontSize: 8, cellPadding: 2},
+          headStyles: {fillColor: [245,245,245], textColor: 20},
+          margin: {left: 14, right: 14}
+        });
+      }
+    } else {
+      // fallback без таблиц
+      facadeLast.walls.forEach((w,i)=>{
+        doc.text(`Стена ${i+1}: H=${fmt(w.h)} м, L=${fmt(w.L)} м, профиль ${w.prof}, листов ${fmtInt(w.sheets)} шт`, 14, y);
+        y += 7;
+      });
+    }
+
+    doc.save('raschet-fasada.pdf');
+  }
+  if (faPdfBtn) faPdfBtn.onclick = downloadFacadePdf;
+
 });
 sCalcBtn?.addEventListener('click', sCalc);
 sPdfBtn?.addEventListener('click', downloadSoffitPdf);
