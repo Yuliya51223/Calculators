@@ -122,6 +122,12 @@ button{
   font-size: 12px;
   color: #666;
 }
+
+.top-note{
+  font-size: 13px;
+  margin: 6px 0 14px;
+}
+.top-note a{ color: inherit; }
 select:disabled{
   background: #f0f0f0;
   color: #777;
@@ -333,18 +339,70 @@ select:disabled{
   .roof-picks{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-/* ===== Основной калькулятор продукта ===== */
-.mp-block { margin-top: 12px; }
-.mp-block h3 { margin: 10px 0 8px; }
-.mp-subblock { margin-top: 6px; padding: 10px; border: 1px dashed rgba(0,0,0,.2); border-radius: 12px; }
-.actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
-.checks { display:flex; flex-wrap:wrap; gap:10px; margin-top:6px; }
-.check { display:flex; gap:8px; align-items:center; user-select:none; }
-.mp-table { width:100%; border-collapse: collapse; margin-top:10px; }
-.mp-table th, .mp-table td { border: 1px solid rgba(0,0,0,.25); padding: 8px; vertical-align: top; }
-.mp-table th { background: rgba(0,0,0,.06); }
-.wall-card { margin-top: 12px; padding: 12px; border: 1px solid rgba(0,0,0,.12); border-radius: 14px; }
-.wall-head { display:flex; justify-content: space-between; align-items:center; gap:10px; }
-.wall-head h4 { margin: 0; }
-.wall-note { font-size: 12px; opacity: .8; margin-top: 6px; }
-.small { font-size: 12px; opacity: .85; }
+
+/* === Sofit fixes === */
+.soffit-trims {
+  display: grid;
+  grid-template-columns: 24px auto;
+  column-gap: 8px;
+  row-gap: 10px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.soffit-trims label {
+  margin: 0;
+  cursor: pointer;
+}
+
+
+/* Sofit trims block */
+.trims-block{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+}
+.trims-title{
+  font-size:14px;
+  font-weight:600;
+  margin:0;
+}
+.trims-list{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.trims-item{
+  display:flex;
+  align-items:center;
+  gap:8px; /* closer label to checkbox */
+  margin:0;
+  font-size:14px;
+  line-height:1.2;
+}
+.trims-item input{ margin:0; }
+
+
+/* Sofit trims: keep labels on one line and closer to checkbox */
+.trims-item{ gap:6px; }
+.trims-item span{ white-space:nowrap; }
+
+
+/* Sofit result table improvements */
+.mp-table{
+  width:100%;
+  border-collapse:collapse;
+}
+.mp-table th,
+.mp-table td{
+  border:1px solid #000;
+  padding:10px 14px;
+}
+.mp-table th:nth-child(1),
+.mp-table td:nth-child(1){ width:50%; }
+.mp-table th:nth-child(2),
+.mp-table td:nth-child(2){ width:25%; }
+.mp-table th:nth-child(3),
+.mp-table td:nth-child(3){ width:25%; }
