@@ -463,3 +463,46 @@ label.check span,
   .roof-picks{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
   button{ padding:10px 12px; }
 }
+/* ===== MOBILE: софиты — доборы без "уезда" ===== */
+@media (max-width: 760px){
+
+  .trims-block{
+    display: flex !important;
+    flex-direction: column !important;   /* заголовок сверху */
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .trims-title{
+    width: 100% !important;
+    margin: 0 !important;
+    text-align: left !important;
+  }
+
+  .trims-list{
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;   /* чекбоксы столбиком */
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .trims-item{
+    width: 100% !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    gap: 6px !important;                /* расстояние галочка→текст */
+    text-align: left !important;
+  }
+
+  .trims-item input{
+    margin: 2px 0 0 0 !important;
+    flex: 0 0 auto !important;
+  }
+
+  .trims-item span{
+    white-space: normal !important;     /* перенос на мобилке */
+    text-align: left !important;
+  }
+}
