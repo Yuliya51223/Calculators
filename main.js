@@ -76,8 +76,7 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
   const jHeights = [
     0.48,0.58,0.67,0.77,0.86,0.96,1.05,1.15,1.24,1.34,
     1.43,1.53,1.62,1.72,1.81,1.91,2.00,2.10,2.19,2.29,
-    2.38,2.48,2.57,2.67,2.76,2.86,2.95,3.05,3.14,3.24,
-    3.33,3.43,3.52,3.62,3.71,3.81,3.90,4.00
+    2.38,2.48,2.57,2.67,2.76,2.86,2.95
   ];
 
   const jDepths = [];
@@ -298,7 +297,29 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
     if (h <= 3) return 3;
     return Math.ceil(h);
   }
-  function sizeBySpan(span){
+
+  // Для "Стойка" и "Крепежная планка":
+  // - если Высота забора <= 2 м => 2 м
+  // - если 2 < Высота забора <= 3 м => 3 м
+  // - если Высота забора > 3 м => 2 м
+  function sizeByHeightStoykaKrepezh(h){
+    if (h <= 2) return 2;
+    if (h <= 3) return 3;
+    return 2;
+  }
+
+  
+  // Для "Декоративная накладка" и "Декоративная накладка угловая":
+  // - если Высота забора <= 2 м => 2 м
+  // - если 2 < Высота забора <= 3 м => 3 м
+  // - если Высота забора > 3 м => 2 м
+  function sizeByHeightDekor(h){
+    if (h <= 2) return 2;
+    if (h <= 3) return 3;
+    return 2;
+  }
+
+function sizeBySpan(span){
     if (span <= 2) return 2;
     if (span <= 3) return 3;
     return Math.ceil(span);
@@ -368,13 +389,15 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
       addAgg(agg, 'lamel', lamelSize, lamelQty);
 
       // Стойка
-      const stoykaSize = sizeByHeight(s.height);
+      const stoykaSize = sizeByHeightStoykaKrepezh(s.height);
       const stoykaQty = s.sectionsQty * 2;
       addAgg(agg, 'stoyka', stoykaSize, stoykaQty);
 
       // Крепежная планка
-      const krepezhSize = sizeByHeight(s.height);
-      const krepezhQty = krepezhSize * s.sectionsQty; // как в вашем примере
+      const krepezhSize = sizeByHeightStoykaKrepezh(s.height);
+      const fenceLen = s.span * s.sectionsQty;
+      const krepezhMultiplier = (fenceLen > 3) ? 2 : 1; // если длина забора (суммарно по секциям) > 3 м, крепежных планок в 2 раза больше
+      const krepezhQty = Math.ceil((s.span / 0.5)) * 2 * krepezhMultiplier * s.sectionsQty; // расстояние между столбов / 0,5 * 2 (если длина >3м) * кол-во секций, округление вверх
       addAgg(agg, 'krepezh', krepezhSize, krepezhQty);
 
       // Крышка
@@ -384,14 +407,14 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
 
       // Декоративная накладка (если столбы НЕ кирп/бетон)
       if (s.brick === 'no') {
-        const dekorSize = sizeByHeight(s.height);
+        const dekorSize = sizeByHeightDekor(s.height);
         const dekorQty = (s.sectionsQty + 1) * 2 - (s.corners * 2);
         addAgg(agg, 'dekor', dekorSize, dekorQty);
       }
 
       // Угловая декоративная накладка (если углы > 0)
       if (s.corners > 0) {
-        const dekorUSize = sizeByHeight(s.height);
+        const dekorUSize = sizeByHeightDekor(s.height);
         const dekorUQty = s.corners;
         addAgg(agg, 'dekor_ugol', dekorUSize, dekorUQty);
       }
