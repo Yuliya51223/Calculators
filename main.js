@@ -420,6 +420,8 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
 
   // кнопка "Добавить секцию"
   addSectionBtn.addEventListener('click', () => createSection());
+  if (addWicketBtn) addWicketBtn.addEventListener('click', () => createWicket());
+  if (addGateBtn) addGateBtn.addEventListener('click', () => createGate());
 
   // ===== РЕНДЕР ТАБЛИЦЫ =====
   function esc(s){
@@ -486,8 +488,6 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
       const depth = Number((sec.querySelector('.j_depth')?.value || '').replace(',', '.'));
       return { name, height, span, sectionsQty, corners, brick, pipe, depth };
     });
-  if (addWicketBtn) addWicketBtn.addEventListener('click', () => { createWicket(); jResetOutput(); });
-  if (addGateBtn) addGateBtn.addEventListener('click', () => { createGate(); jResetOutput(); });
   }
 
   function roundToCmMeters(x){ return Number(x.toFixed(2)); } // до 0,01 м
