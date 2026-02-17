@@ -319,7 +319,7 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
       const height = Number((sec.querySelector('.j_height')?.value || '').replace(',', '.'));
       const span = Number(sec.querySelector('.j_span')?.value);
       const sectionsQty = Number(sec.querySelector('.j_sections')?.value);
-      const corners = Number(sec.querySelector('.j_corners')?.value);
+      const corners = Number(((sec.querySelector('.j_corners')?.value || '0') + '').replace(',', '.'));
       const brick = sec.querySelector('.j_brick')?.value || '';
       const pipe = sec.querySelector('.j_pipe')?.value || ''; // none / 60x60 / 80x80
       const depth = Number((sec.querySelector('.j_depth')?.value || '').replace(',', '.'));
@@ -453,7 +453,7 @@ function sizeBySpan(span){
       }
 
       // Угловая декоративная накладка (если углы > 0)
-      if (s.corners !== 0 && s.pipe !== 'none') {
+      if (isFinite(s.corners) && s.corners !== 0) {
         const dekorUSize = sizeByHeightDekor(s.height);
         const dekorUQty = s.corners;
         addAgg(agg, 'dekor_ugol', dekorUSize, dekorUQty);
