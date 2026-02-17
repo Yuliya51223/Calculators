@@ -205,6 +205,40 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
       el.addEventListener('change', jResetOutput);
     });
 
+
+    // --- UI rules ---
+    const brickSel = div.querySelector('.j_brick');
+    const pipeSel  = div.querySelector('.j_pipe');
+    const depthSel = div.querySelector('.j_depth');
+    const pipeField  = pipeSel ? pipeSel.closest('.field') : null;
+    const depthField = depthSel ? depthSel.closest('.field') : null;
+
+    function applyJaluziUiRules(){
+      const brickYes = brickSel && brickSel.value === 'yes';
+      const pipeNone = !pipeSel || pipeSel.value === 'none';
+
+      // If brick/beton columns = yes -> hide pipe size and force pipe=none
+      if (pipeField){
+        pipeField.classList.toggle('hidden', brickYes);
+      }
+      if (brickYes && pipeSel){
+        pipeSel.value = 'none';
+      }
+
+      // Depth shown only when pipe is selected (not "none") AND brick is not yes
+      const showDepth = (!brickYes) && pipeSel && pipeSel.value !== 'none';
+      if (depthField){
+        depthField.classList.toggle('hidden', !showDepth);
+        if (!showDepth && depthSel) depthSel.value = '';
+      }
+    }
+
+    if (brickSel) brickSel.addEventListener('change', applyJaluziUiRules);
+    if (pipeSel) pipeSel.addEventListener('change', applyJaluziUiRules);
+
+    // apply on init
+    applyJaluziUiRules();
+
     updateSectionTitles();
   }
 
@@ -396,7 +430,7 @@ function sizeBySpan(span){
       // Крепежная планка
       const krepezhSize = sizeByHeightStoykaKrepezh(s.height);
       // формула: расстояние между столбов / 1 * кол-во секций (округляем вверх)
-      const krepezhQty = Math.ceil((s.span / 1)) * s.sectionsQty;
+      const krepezhQty = Math.ceil((s.span / 1) * s.sectionsQty);
       addAgg(agg, 'krepezh', krepezhSize, krepezhQty);
 
       // Крышка
