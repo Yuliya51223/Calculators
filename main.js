@@ -395,9 +395,8 @@ function sizeBySpan(span){
 
       // Крепежная планка
       const krepezhSize = sizeByHeightStoykaKrepezh(s.height);
-      const fenceLen = s.span * s.sectionsQty;
-      const krepezhMultiplier = (fenceLen > 3) ? 2 : 1; // если длина забора (суммарно по секциям) > 3 м, крепежных планок в 2 раза больше
-      const krepezhQty = Math.ceil((s.span / 0.5)) * 2 * krepezhMultiplier * s.sectionsQty; // расстояние между столбов / 0,5 * 2 (если длина >3м) * кол-во секций, округление вверх
+      // формула: расстояние между столбов / 1 * кол-во секций (округляем вверх)
+      const krepezhQty = Math.ceil((s.span / 1)) * s.sectionsQty;
       addAgg(agg, 'krepezh', krepezhSize, krepezhQty);
 
       // Крышка
@@ -406,14 +405,14 @@ function sizeBySpan(span){
       addAgg(agg, 'kryshka', kryshkaSize, kryshkaQty);
 
       // Декоративная накладка (если столбы НЕ кирп/бетон)
-      if (s.brick === 'no') {
+      if (s.brick === 'no' && s.pipe !== 'none') {
         const dekorSize = sizeByHeightDekor(s.height);
         const dekorQty = (s.sectionsQty + 1) * 2 - (s.corners * 2);
         addAgg(agg, 'dekor', dekorSize, dekorQty);
       }
 
       // Угловая декоративная накладка (если углы > 0)
-      if (s.corners > 0) {
+      if (s.corners > 0 && s.pipe !== 'none') {
         const dekorUSize = sizeByHeightDekor(s.height);
         const dekorUQty = s.corners;
         addAgg(agg, 'dekor_ugol', dekorUSize, dekorUQty);
@@ -431,8 +430,10 @@ function sizeBySpan(span){
         addAgg(agg, 'profftruba', 6, profftrubaQty);
       }
 
-      // Саморезы для стойки
-      addAgg(agg, 'screw_stoyka', '5.5x19', stoykaQty * 5);
+      // Саморезы для стойки (не считаем, если профтруба = нет)
+      if (s.pipe !== 'none') {
+        addAgg(agg, 'screw_stoyka', '5.5x19', stoykaQty * 5);
+      }
 
       // Саморезы ПШ
       const screwPSHQty =
