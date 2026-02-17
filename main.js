@@ -453,7 +453,7 @@ function sizeBySpan(span){
       }
 
       // Угловая декоративная накладка (если углы > 0)
-      if (s.corners > 0 && s.pipe !== 'none') {
+      if (s.corners !== 0 && s.pipe !== 'none') {
         const dekorUSize = sizeByHeightDekor(s.height);
         const dekorUQty = s.corners;
         addAgg(agg, 'dekor_ugol', dekorUSize, dekorUQty);
