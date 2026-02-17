@@ -1,3 +1,158 @@
+
+
+  // ===== Калитки / Ворота =====
+  function createWicket(){
+    const idx = wicketsWrap.querySelectorAll('.j-wicket').length + 1;
+    const div = document.createElement('div');
+    div.className = 'calc-block j-wicket';
+    div.innerHTML = `
+      <div class="section-header">
+        <div class="section-title">Калитка ${idx}</div>
+        <button type="button" class="remove-section j_removeWicket">Удалить</button>
+      </div>
+
+      <div class="grid3">
+        <div class="field">
+          <label>Наименование забора</label>
+          <select class="w_name">
+            <option value="yukka">Юкка</option>
+            <option value="hosta">Хоста</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Высота калитки, м</label>
+          <input class="w_height" type="number" min="0" step="0.01" value="0">
+        </div>
+
+        <div class="field">
+          <label>Расстояние между столбов под калитку, м</label>
+          <input class="w_span" type="number" min="0" step="0.01" value="0">
+        </div>
+
+        <div class="field">
+          <label>Размер профтрубы на калитку</label>
+          <select class="w_pipe">
+            <option value="40x60">40×60</option>
+            <option value="60x60">60×60</option>
+            <option value="80x80">80×80</option>
+          </select>
+        </div>
+      </div>
+    `;
+
+    div.querySelector('.j_removeWicket').addEventListener('click', () => {
+      div.remove();
+      updateWicketTitles();
+      jResetOutput();
+    });
+
+    div.querySelectorAll('input, select').forEach(el => {
+      el.addEventListener('input', jResetOutput);
+      el.addEventListener('change', jResetOutput);
+    });
+
+    wicketsWrap.appendChild(div);
+    updateWicketTitles();
+  }
+
+  function createGate(){
+    const idx = gatesWrap.querySelectorAll('.j-gate').length + 1;
+    const div = document.createElement('div');
+    div.className = 'calc-block j-gate';
+    div.innerHTML = `
+      <div class="section-header">
+        <div class="section-title">Ворота ${idx}</div>
+        <button type="button" class="remove-section j_removeGate">Удалить</button>
+      </div>
+
+      <div class="grid3">
+        <div class="field">
+          <label>Наименование забора</label>
+          <select class="g_name">
+            <option value="yukka">Юкка</option>
+            <option value="hosta">Хоста</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Высота ворот, м</label>
+          <input class="g_height" type="number" min="0" step="0.01" value="0">
+        </div>
+
+        <div class="field">
+          <label>Тип ворот</label>
+          <select class="g_type">
+            <option value="slide">Откатные</option>
+            <option value="swing">Распашные</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Расстояние между столбов под ворота, м</label>
+          <div class="hint">Если длина ворот более 4 м, будет добавлена дополнительная труба посередине</div>
+          <input class="g_span" type="number" min="0" step="0.01" value="0">
+        </div>
+
+        <div class="field">
+          <label>Размер профтрубы на ворота</label>
+          <select class="g_pipe">
+            <option value="60x60">60×60</option>
+            <option value="80x80">80×80</option>
+          </select>
+        </div>
+      </div>
+    `;
+
+    div.querySelector('.j_removeGate').addEventListener('click', () => {
+      div.remove();
+      updateGateTitles();
+      jResetOutput();
+    });
+
+    div.querySelectorAll('input, select').forEach(el => {
+      el.addEventListener('input', jResetOutput);
+      el.addEventListener('change', jResetOutput);
+    });
+
+    gatesWrap.appendChild(div);
+    updateGateTitles();
+  }
+
+  function updateWicketTitles(){
+    wicketsWrap.querySelectorAll('.j-wicket').forEach((w, i) => {
+      const t = w.querySelector('.section-title');
+      if (t) t.textContent = `Калитка ${i+1}`;
+    });
+  }
+
+  function updateGateTitles(){
+    gatesWrap.querySelectorAll('.j-gate').forEach((g, i) => {
+      const t = g.querySelector('.section-title');
+      if (t) t.textContent = `Ворота ${i+1}`;
+    });
+  }
+
+  function getWicketsData(){
+    return Array.from(wicketsWrap.querySelectorAll('.j-wicket')).map(w => {
+      const name = w.querySelector('.w_name')?.value || 'yukka';
+      const height = Number((w.querySelector('.w_height')?.value || '').replace(',', '.'));
+      const span = Number((w.querySelector('.w_span')?.value || '').replace(',', '.'));
+      const pipe = w.querySelector('.w_pipe')?.value || '60x60';
+      return { name, height, span, pipe };
+    });
+  }
+
+  function getGatesData(){
+    return Array.from(gatesWrap.querySelectorAll('.j-gate')).map(g => {
+      const name = g.querySelector('.g_name')?.value || 'yukka';
+      const height = Number((g.querySelector('.g_height')?.value || '').replace(',', '.'));
+      const type = g.querySelector('.g_type')?.value || 'slide';
+      const span = Number((g.querySelector('.g_span')?.value || '').replace(',', '.'));
+      const pipe = g.querySelector('.g_pipe')?.value || '60x60';
+      return { name, height, type, span, pipe };
+    });
+  }
 // main.js — расчёт ТОЛЬКО по кнопкам "Рассчитать"
 document.addEventListener('DOMContentLoaded', () => {
   // ============================================================
@@ -45,6 +200,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================================
   const sectionsWrap = document.getElementById('sectionsWrap');
   const addSectionBtn = document.getElementById('addSectionBtn');
+  const addWicketBtn = document.getElementById('addWicketBtn');
+  const addGateBtn = document.getElementById('addGateBtn');
+  const wicketsWrap = document.getElementById('wicketsWrap');
+  const gatesWrap = document.getElementById('gatesWrap');
   const jCalcBtn = document.getElementById('j_calcBtn');
   const jErr = document.getElementById('j_err');
   const jTableWrap = document.getElementById('j_tableWrap');
@@ -52,6 +211,8 @@ const jPdfBtn = document.getElementById('j_pdfBtn');
 
 // последнее рассчитанное (для PDF)
 let lastSectionsData = null;
+let lastWicketsData = null;
+let lastGatesData = null;
 let lastFinalAgg = null;
 
   // Если второй калькулятор отсутствует на странице — просто выходим
@@ -325,9 +486,21 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
       const depth = Number((sec.querySelector('.j_depth')?.value || '').replace(',', '.'));
       return { name, height, span, sectionsQty, corners, brick, pipe, depth };
     });
+  if (addWicketBtn) addWicketBtn.addEventListener('click', () => { createWicket(); jResetOutput(); });
+  if (addGateBtn) addGateBtn.addEventListener('click', () => { createGate(); jResetOutput(); });
   }
 
   function roundToCmMeters(x){ return Number(x.toFixed(2)); } // до 0,01 м
+
+  function pipeSizeMeters(val){
+    // '60x60'/'80x80'/'40x60' etc -> meters (max side)
+    if (!val) return 0;
+    const v = String(val).replace('×','x');
+    const parts = v.split('x').map(s=>Number(String(s).replace(/[^0-9.]/g,'')));
+    const mx = Math.max(...parts.filter(n=>isFinite(n) && n>0));
+    return isFinite(mx) ? (mx/1000) : 0;
+  }
+
 
   function sizeByHeight(h){
     if (h <= 2) return 2;
@@ -397,6 +570,9 @@ function sizeBySpan(span){
     jResetOutput();
 
     const data = getAllSectionsData();
+
+    const wicketsData = getWicketsData();
+    const gatesData = getGatesData();
     if (!data.length) {
       jErr.textContent = 'Нет секций для расчёта';
       return;
@@ -421,7 +597,26 @@ function sizeBySpan(span){
       }
     }
 
-    const agg = {};
+    
+    // ===== Валидация калиток =====
+    for (const [i, w] of wicketsData.entries()){
+      const idx = i + 1;
+      if (!isFinite(w.height) || w.height <= 0) { jErr.textContent = `Калитка ${idx}: высота`; return; }
+      if (!isFinite(w.span) || w.span <= 0) { jErr.textContent = `Калитка ${idx}: расстояние между столбов`; return; }
+      const pm = pipeSizeMeters(w.pipe);
+      if (!isFinite(pm) || pm <= 0) { jErr.textContent = `Калитка ${idx}: размер профтрубы`; return; }
+    }
+
+    // ===== Валидация ворот =====
+    for (const [i, g] of gatesData.entries()){
+      const idx = i + 1;
+      if (!isFinite(g.height) || g.height <= 0) { jErr.textContent = `Ворота ${idx}: высота`; return; }
+      if (!isFinite(g.span) || g.span <= 0) { jErr.textContent = `Ворота ${idx}: расстояние между столбов`; return; }
+      const pm = pipeSizeMeters(g.pipe);
+      if (!isFinite(pm) || pm <= 0) { jErr.textContent = `Ворота ${idx}: размер профтрубы`; return; }
+    }
+
+const agg = {};
 
     data.forEach(s => {
       // Ламели
@@ -487,9 +682,137 @@ function sizeBySpan(span){
       addAgg(agg, 'screw_psh', '4.2x16', screwPSHQty);
     });
 
-    const finalAgg = finalizeAgg(agg);
+    
+    // ===== Расчёт калиток =====
+    wicketsData.forEach(w => {
+      const pm = pipeSizeMeters(w.pipe);
+
+      // Ламели
+      const wLamelQty = Math.floor(((w.height - (pm * 2)) / 0.095));
+      const wLamelSize = roundToCmMeters(w.span - 0.01 - 0.035 - (pm * 2) - 0.03);
+      addAgg(agg, 'lamel', wLamelSize, wLamelQty);
+
+      // Стойка
+      const wStoykaSize = sizeByHeightStoykaKrepezh(w.height);
+      const wStoykaQty = 2;
+      addAgg(agg, 'stoyka', wStoykaSize, wStoykaQty);
+
+      // Крышка
+      const wKryshkaSize = sizeBySpan(w.span);
+      const wKryshkaQty = 1;
+      addAgg(agg, 'kryshka', wKryshkaSize, wKryshkaQty);
+
+      // Декоративная накладка
+      const wDekorSize = sizeByHeightDekor(w.height);
+      const wDekorQty = 4;
+      addAgg(agg, 'dekor', wDekorSize, wDekorQty);
+
+      // Планка завершающая
+      const wFinishSize = sizeBySpan(w.span);
+      const wFinishQty = 1;
+      addAgg(agg, 'finish', wFinishSize, wFinishQty);
+
+      // Профтруба 6 м
+      const wProffQty = Math.ceil(((w.height * 2) + (w.span - 0.035 - (pm * 2) - 0.03)) / 6);
+      addAgg(agg, 'profftruba', 6, wProffQty);
+
+      // Саморезы для стойки
+      addAgg(agg, 'screw_stoyka', '5.5x19', wStoykaQty * 5);
+
+      // Саморезы ПШ
+      const wPSHQty = (wLamelQty * 4) + (wKryshkaQty * 4) + (wFinishQty * 2);
+      addAgg(agg, 'screw_psh', '4.2x16', wPSHQty);
+    });
+
+    // ===== Расчёт ворот =====
+    gatesData.forEach(g => {
+      const pm = pipeSizeMeters(g.pipe);
+
+      // базовая длина ламели
+      const baseLen = g.span - 0.01 - 0.035 - (pm * 2) - 0.03;
+      const longGate = baseLen > 4;
+
+      // Ламели
+      const gLamelLen = longGate
+        ? roundToCmMeters((g.span - (pm / 2)) - 0.01 - 0.035 - (pm * 2) - 0.03)
+        : roundToCmMeters(baseLen);
+
+      const baseQty = Math.floor(((g.height - (pm * 2)) / 0.095));
+      const gLamelQty = longGate ? (baseQty * 2) : baseQty;
+      addAgg(agg, 'lamel', gLamelLen, gLamelQty);
+
+      // Стойка
+      const gStoykaSize = sizeByHeightStoykaKrepezh(g.height);
+      const gStoykaQty = longGate ? 4 : 2;
+      addAgg(agg, 'stoyka', gStoykaSize, gStoykaQty);
+
+      // Крепежная планка
+      const gKrepezhSize = sizeByHeightStoykaKrepezh(g.height);
+      const gKrepezhQty = Math.floor((g.span / 1));
+      addAgg(agg, 'krepezh', gKrepezhSize, gKrepezhQty);
+
+      // Крышка + Планка завершающая
+      let gKryshkaQty = 0, gKryshkaSize = 0;
+      let gFinishQty = 0, gFinishSize = 0;
+
+      if (!longGate){
+        if (gLamelLen <= 3){
+          gKryshkaQty = 1; gKryshkaSize = 3;
+          gFinishQty  = 1; gFinishSize  = 3;
+        } else {
+          gKryshkaQty = 2; gKryshkaSize = 2;
+          gFinishQty  = 2; gFinishSize  = 2;
+        }
+      } else {
+        const Lr = Number(gLamelLen.toFixed(2));
+        const isInt = Math.abs(Lr - Math.round(Lr)) < 1e-9;
+        const isEven = isInt && (Math.round(Lr) % 2 === 0);
+
+        if (isEven){
+          gKryshkaQty = Math.max(1, Math.round(Lr / 2));
+          gKryshkaSize = 2;
+          gFinishQty = gKryshkaQty;
+          gFinishSize = 2;
+        } else {
+          gKryshkaQty = Math.max(1, Math.ceil(Lr / 3));
+          gKryshkaSize = 3;
+          gFinishQty = gKryshkaQty;
+          gFinishSize = 3;
+        }
+      }
+
+      addAgg(agg, 'kryshka', gKryshkaSize, gKryshkaQty);
+      addAgg(agg, 'finish', gFinishSize, gFinishQty);
+
+      // Декоративная накладка
+      const gDekorSize = sizeByHeightDekor(g.height);
+      const gDekorQty = longGate ? 6 : 4;
+      addAgg(agg, 'dekor', gDekorSize, gDekorQty);
+
+      // Профтруба 6 м
+      const gProffQty = Math.ceil(((g.height * 2) + (g.span - 0.035 - (pm * 2) - 0.03)) / 6);
+      addAgg(agg, 'profftruba', 6, gProffQty);
+
+      // Саморезы для стойки
+      addAgg(agg, 'screw_stoyka', '5.5x19', gStoykaQty * 5);
+
+      // Саморезы ПШ
+      const gPSHQty =
+        (gLamelQty * 4) +
+        (gKrepezhQty * gLamelQty) +
+        (gKryshkaQty * 4) +
+        (gKryshkaQty * gKrepezhQty) +
+        (gFinishQty * 2) +
+        (gFinishQty * gKrepezhQty);
+
+      addAgg(agg, 'screw_psh', '4.2x16', gPSHQty);
+    });
+
+const finalAgg = finalizeAgg(agg);
     renderBOMTable(finalAgg);
     lastSectionsData = data;
+lastWicketsData = wicketsData;
+lastGatesData = gatesData;
 lastFinalAgg = finalAgg;
 jPdfBtn.classList.remove('hidden');
   }
@@ -590,6 +913,53 @@ function downloadJaluziPdf(){
 
   margin: { left: 14, right: 14 }
 });
+
+
+  
+  // ===== Таблица введённых данных по калиткам =====
+  if (lastWicketsData && lastWicketsData.length){
+    const wHead = [[ 'Калитка', 'Наименование', 'Высота, м', 'Расст. между, м', 'Проф труба' ]];
+    const wBody = lastWicketsData.map((w, i) => ([
+      String(i+1),
+      w.name === 'yukka' ? 'Юкка' : (w.name === 'hosta' ? 'Хоста' : w.name),
+      String(w.height).replace('.', ','),
+      String(w.span).replace('.', ','),
+      String(w.pipe).replace('x','×')
+    ]));
+    doc.autoTable({
+      head: wHead,
+      body: wBody,
+      startY: doc.lastAutoTable.finalY + 6,
+      theme: 'grid',
+      styles: { font: 'Montserrat', fontSize: 8, cellPadding: 2, halign: 'center', valign: 'middle', lineColor:[0,0,0], lineWidth:0.2 },
+      headStyles:{ font:'Montserrat', fillColor:[220,220,220], textColor:[0,0,0], lineColor:[0,0,0], lineWidth:0.3, fontSize:8 },
+      alternateRowStyles:{ fillColor:[245,245,245] },
+      margin:{ left:14, right:14 }
+    });
+  }
+
+  // ===== Таблица введённых данных по воротам =====
+  if (lastGatesData && lastGatesData.length){
+    const gHead = [[ 'Ворота', 'Наименование', 'Высота, м', 'Тип', 'Расст. между, м', 'Проф труба' ]];
+    const gBody = lastGatesData.map((g, i) => ([
+      String(i+1),
+      g.name === 'yukka' ? 'Юкка' : (g.name === 'hosta' ? 'Хоста' : g.name),
+      String(g.height).replace('.', ','),
+      g.type === 'slide' ? 'Откатные' : 'Распашные',
+      String(g.span).replace('.', ','),
+      String(g.pipe).replace('x','×')
+    ]));
+    doc.autoTable({
+      head: gHead,
+      body: gBody,
+      startY: doc.lastAutoTable.finalY + 6,
+      theme: 'grid',
+      styles: { font: 'Montserrat', fontSize: 8, cellPadding: 2, halign: 'center', valign: 'middle', lineColor:[0,0,0], lineWidth:0.2 },
+      headStyles:{ font:'Montserrat', fillColor:[220,220,220], textColor:[0,0,0], lineColor:[0,0,0], lineWidth:0.3, fontSize:8 },
+      alternateRowStyles:{ fillColor:[245,245,245] },
+      margin:{ left:14, right:14 }
+    });
+  }
 
 
   let y = doc.lastAutoTable.finalY + 8;
