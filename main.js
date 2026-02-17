@@ -214,21 +214,24 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
     const depthField = depthSel ? depthSel.closest('.field') : null;
 
     function applyJaluziUiRules(){
-      const brickYes = brickSel && brickSel.value === 'yes';
+      const brickNo = brickSel && brickSel.value === 'no';
 
-      // Размер профтрубы: если кирп/бетон = да -> поле видно, но отключено
-      if (pipeField) pipeField.classList.toggle('disabled-field', brickYes);
-      if (pipeSel){
-        pipeSel.disabled = !!brickYes;
-        if (brickYes) pipeSel.value = 'none';
+      // 1) Размер профтрубы: скрыт по умолчанию, показываем только если кирп/бетон = НЕТ
+      if (pipeField){
+        pipeField.classList.toggle('hidden', !brickNo);
+      }
+      if (!brickNo && pipeSel){
+        pipeSel.value = 'none';
       }
 
-      // Заглубление: видно, но активно только если профтруба выбрана и кирп/бетон = нет
-      const allowDepth = (!brickYes) && pipeSel && (pipeSel.value !== 'none');
-      if (depthField) depthField.classList.toggle('disabled-field', !allowDepth);
-      if (depthSel){
-        depthSel.disabled = !allowDepth;
-        if (!allowDepth) depthSel.value = '';
+      // 2) Заглубление: скрыто по умолчанию, показываем только если профтруба 60х60 или 80х80
+      const pipeVal = pipeSel ? pipeSel.value : 'none';
+      const showDepth = (pipeVal === '60x60' || pipeVal === '80x80');
+      if (depthField){
+        depthField.classList.toggle('hidden', !showDepth);
+      }
+      if (!showDepth && depthSel){
+        depthSel.value = '';
       }
     }
 
