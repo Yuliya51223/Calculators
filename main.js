@@ -437,7 +437,7 @@ function sizeBySpan(span){
       // Крепежная планка
       const krepezhSize = sizeByHeightStoykaKrepezh(s.height);
       // формула: расстояние между столбов / 1 * кол-во секций (округляем вверх)
-      const krepezhQty = Math.ceil((s.span / 1) * s.sectionsQty);
+      const krepezhQty = Math.floor((s.span / 1) * s.sectionsQty);
       addAgg(agg, 'krepezh', krepezhSize, krepezhQty);
 
       // Крышка
