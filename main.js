@@ -414,7 +414,11 @@ function sizeBySpan(span){
       if (!Number.isInteger(s.corners) || s.corners < 0) { jErr.textContent = `Секция ${idx}: углы — целое ≥ 0`; return; }
       if (!s.brick) { jErr.textContent = `Секция ${idx}: выберите кирпичные/бетонные столбы`; return; }
       if (!s.pipe) { jErr.textContent = `Секция ${idx}: выберите размер профтрубы`; return; }
-      if (!isFinite(s.depth) || s.depth < 0.3 || s.depth > 1.5) { jErr.textContent = `Секция ${idx}: заглубление 0,3–1,5 м`; return; }
+      // Заглубление требуется только если поле показывается (проф труба 60×60 или 80×80 и кирп/бетон = нет)
+      const needDepth = (s.brick === 'no') && (s.pipe === '60x60' || s.pipe === '80x80');
+      if (needDepth) {
+        if (!isFinite(s.depth) || s.depth < 0.3 || s.depth > 1.5) { jErr.textContent = `Секция ${idx}: заглубление 0,3–1,5 м`; return; }
+      }
     }
 
     const agg = {};
