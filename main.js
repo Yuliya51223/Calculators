@@ -215,12 +215,28 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
 
     function applyJaluziUiRules(){
       const brickYes = brickSel && brickSel.value === 'yes';
-      const pipeNone = !pipeSel || pipeSel.value === 'none';
 
-      // If brick/beton columns = yes -> hide pipe size and force pipe=none
+      // 1) Размер профтрубы: если кирп/бетон = да -> поле НЕ скрываем, а отключаем
       if (pipeField){
-        pipeField.classList.toggle('hidden', brickYes);
+        pipeField.classList.toggle('disabled-field', brickYes);
       }
+      if (pipeSel){
+        pipeSel.disabled = !!brickYes;
+      }
+      if (brickYes && pipeSel){
+        pipeSel.value = 'none';
+      }
+
+      // 2) Заглубление: активно только если профтруба выбрана (не "нет") и кирп/бетон = нет
+      const allowDepth = (!brickYes) && pipeSel && (pipeSel.value !== 'none');
+      if (depthField){
+        depthField.classList.toggle('disabled-field', !allowDepth);
+      }
+      if (depthSel){
+        depthSel.disabled = !allowDepth;
+        if (!allowDepth) depthSel.value = '';
+      }
+    }
       if (brickYes && pipeSel){
         pipeSel.value = 'none';
       }

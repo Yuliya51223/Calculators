@@ -570,3 +570,8 @@ select:disabled{
     padding: 10px 12px;
   }
 }
+
+
+/* UI: show field but disable it (no jumping) */
+.disabled-field{ opacity:0.55; }
+.disabled-field select, .disabled-field input{ pointer-events:none; }
