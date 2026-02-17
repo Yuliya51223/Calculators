@@ -216,36 +216,19 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
     function applyJaluziUiRules(){
       const brickYes = brickSel && brickSel.value === 'yes';
 
-      // 1) Размер профтрубы: если кирп/бетон = да -> поле НЕ скрываем, а отключаем
-      if (pipeField){
-        pipeField.classList.toggle('disabled-field', brickYes);
-      }
+      // Размер профтрубы: если кирп/бетон = да -> поле видно, но отключено
+      if (pipeField) pipeField.classList.toggle('disabled-field', brickYes);
       if (pipeSel){
         pipeSel.disabled = !!brickYes;
-      }
-      if (brickYes && pipeSel){
-        pipeSel.value = 'none';
+        if (brickYes) pipeSel.value = 'none';
       }
 
-      // 2) Заглубление: активно только если профтруба выбрана (не "нет") и кирп/бетон = нет
+      // Заглубление: видно, но активно только если профтруба выбрана и кирп/бетон = нет
       const allowDepth = (!brickYes) && pipeSel && (pipeSel.value !== 'none');
-      if (depthField){
-        depthField.classList.toggle('disabled-field', !allowDepth);
-      }
+      if (depthField) depthField.classList.toggle('disabled-field', !allowDepth);
       if (depthSel){
         depthSel.disabled = !allowDepth;
         if (!allowDepth) depthSel.value = '';
-      }
-    }
-      if (brickYes && pipeSel){
-        pipeSel.value = 'none';
-      }
-
-      // Depth shown only when pipe is selected (not "none") AND brick is not yes
-      const showDepth = (!brickYes) && pipeSel && pipeSel.value !== 'none';
-      if (depthField){
-        depthField.classList.toggle('hidden', !showDepth);
-        if (!showDepth && depthSel) depthSel.value = '';
       }
     }
 
@@ -254,6 +237,7 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
 
     // apply on init
     applyJaluziUiRules();
+
 
     updateSectionTitles();
   }
