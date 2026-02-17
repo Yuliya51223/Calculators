@@ -419,9 +419,15 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
   createSection();
 
   // кнопка "Добавить секцию"
-  addSectionBtn.addEventListener('click', () => createSection());
-  if (addWicketBtn) addWicketBtn.addEventListener('click', () => createWicket());
-  if (addGateBtn) addGateBtn.addEventListener('click', () => createGate());
+  if (addSectionBtn) addSectionBtn.addEventListener('click', () => createSection());
+
+  // Делегирование кликов (на случай если кнопки/блоки появляются динамически)
+  document.addEventListener('click', (e) => {
+    const t = e.target;
+    if (t && t.closest && t.closest('#addWicketBtn')) { createWicket(); jResetOutput(); }
+    if (t && t.closest && t.closest('#addGateBtn')) { createGate(); jResetOutput(); }
+  });
+
 
   // ===== РЕНДЕР ТАБЛИЦЫ =====
   function esc(s){
