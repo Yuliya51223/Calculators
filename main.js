@@ -130,16 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <label>Высота ворот, м</label>
           <input class="g_height" type="number" min="0" step="0.01" value="0">
         </div>
-
-        <div class="field">
-          <label>Тип ворот</label>
-          <select class="g_type">
-            <option value="slide">Откатные</option>
-            <option value="swing">Распашные</option>
-          </select>
-        </div>
-
-        <div class="field">
+<div class="field">
           <label>Расстояние между столбов под ворота, м</label>
           <div class="hint">Если длина ворот более 4 м, будет добавлена дополнительная труба посередине</div>
           <input class="g_span" type="number" min="0" step="0.01" value="0">
@@ -198,10 +189,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return Array.from(gatesWrap.querySelectorAll('.j-gate')).map(g => {
       const name = g.querySelector('.g_name')?.value || 'yukka';
       const height = Number((g.querySelector('.g_height')?.value || '').replace(',', '.'));
-      const type = g.querySelector('.g_type')?.value || 'slide';
+
       const span = Number((g.querySelector('.g_span')?.value || '').replace(',', '.'));
       const pipe = g.querySelector('.g_pipe')?.value || '60x60';
-      return { name, height, type, span, pipe };
+      return { name, height, span, pipe };
     });
   }
 
@@ -650,7 +641,7 @@ const agg = {};
       // Декоративная накладка (если столбы НЕ кирп/бетон)
       if (s.brick === 'no' && s.pipe !== 'none') {
         const dekorSize = sizeByHeightDekor(s.height);
-        const dekorQty = (s.sectionsQty + 1) * 2 - (s.corners * 2);
+        const dekorQty = Math.max(0, (s.sectionsQty * 2) + 2);
         addAgg(agg, 'dekor', dekorSize, dekorQty);
       }
 
@@ -669,8 +660,8 @@ const agg = {};
       // Профтруба (если выбрано не "нет")
       let profftrubaQty = 0;
       if (s.pipe !== 'none') {
-        profftrubaQty = Math.ceil((2 * (s.height + s.depth)) / 6);
-        addAgg(agg, 'profftruba', 6, profftrubaQty);
+        profftrubaQty = Math.ceil(((s.sectionsQty + 1) * (s.height + s.depth)) / 6);
+        addAgg(agg, 'profftruba', s.pipe, profftrubaQty);
       }
 
       // Саморезы для стойки (не считаем, если профтруба = нет)
@@ -721,7 +712,7 @@ const agg = {};
 
       // Профтруба 6 м
       const wProffQty = Math.ceil(((w.height * 2) + (w.span - 0.035 - (pm * 2) - 0.03)) / 6);
-      addAgg(agg, 'profftruba', 6, wProffQty);
+      addAgg(agg, 'profftruba', w.pipe, wProffQty);
 
       // Саморезы для стойки
       addAgg(agg, 'screw_stoyka', '5.5x19', wStoykaQty * 5);
@@ -798,7 +789,7 @@ const agg = {};
 
       // Профтруба 6 м
       const gProffQty = Math.ceil(((g.height * 2) + (g.span - 0.035 - (pm * 2) - 0.03)) / 6);
-      addAgg(agg, 'profftruba', 6, gProffQty);
+      addAgg(agg, 'profftruba', g.pipe, gProffQty);
 
       // Саморезы для стойки
       addAgg(agg, 'screw_stoyka', '5.5x19', gStoykaQty * 5);
@@ -947,13 +938,12 @@ function downloadJaluziPdf(){
 
   // ===== Таблица введённых данных по воротам =====
   if (lastGatesData && lastGatesData.length){
-    const gHead = [[ 'Ворота', 'Наименование', 'Высота, м', 'Тип', 'Расст. между, м', 'Проф труба' ]];
+    const gHead = [[ 'Ворота', 'Наименование', 'Высота, м', 'Расст. между, м', 'Проф труба' ]];
     const gBody = lastGatesData.map((g, i) => ([
       String(i+1),
       g.name === 'yukka' ? 'Юкка' : (g.name === 'hosta' ? 'Хоста' : g.name),
       String(g.height).replace('.', ','),
-      g.type === 'slide' ? 'Откатные' : 'Распашные',
-      String(g.span).replace('.', ','),
+            String(g.span).replace('.', ','),
       String(g.pipe).replace('x','×')
     ]));
     doc.autoTable({
