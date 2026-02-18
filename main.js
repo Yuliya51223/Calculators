@@ -415,13 +415,13 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
 }
 
 
-  // первая секция при загрузке
-  createSection();
-
-  // кнопка "Добавить секцию"
-  if (addSectionBtn) if (addSectionBtn) addSectionBtn.addEventListener('click', () => createSection());
+  // кнопки добавления
+  if (addSectionBtn) addSectionBtn.addEventListener('click', () => { createSection(); jResetOutput(); });
   if (addWicketBtn) addWicketBtn.addEventListener('click', () => { createWicket(); jResetOutput(); });
   if (addGateBtn) addGateBtn.addEventListener('click', () => { createGate(); jResetOutput(); });
+
+  // первая секция при загрузке
+  try { createSection(); } catch(e){ console.error(e); }
 
 
   // ===== РЕНДЕР ТАБЛИЦЫ =====
