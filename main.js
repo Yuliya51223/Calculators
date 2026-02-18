@@ -1,4 +1,55 @@
 
+document.addEventListener('DOMContentLoaded', () => {
+  // ============================================================
+  // 0) ВЫБОР КАЛЬКУЛЯТОРА (показываем только выбранный)
+  // ============================================================
+  const calcSelect = document.getElementById('calcSelect');
+  const calcItems = Array.from(document.querySelectorAll('section.calc-item[data-calc]'));
+
+  function calcTitle(sec){
+    const h2 = sec.querySelector('h2');
+    return (h2 ? h2.textContent.trim() : sec.dataset.calc);
+  }
+
+  function hideAllCalcItems(){
+    calcItems.forEach(sec => sec.classList.add('hidden'));
+  }
+
+  function showCalc(key){
+    hideAllCalcItems();
+    const sec = calcItems.find(s => s.dataset.calc === key);
+    if (sec) sec.classList.remove('hidden');
+  }
+
+  // наполняем список
+  if (calcSelect && calcItems.length){
+    calcSelect.innerHTML = '<option value="">— выберите —</option>' +
+      calcItems.map(sec => `<option value="${sec.dataset.calc}">${calcTitle(sec)}</option>`).join('');
+
+    // старт: всё скрыто
+    hideAllCalcItems();
+
+    calcSelect.addEventListener('change', () => {
+      if (!calcSelect.value){
+        hideAllCalcItems();
+      } else {
+        showCalc(calcSelect.value);
+      }
+    });
+  }
+  
+
+  
+  // ============================================================
+  // 2) КАЛЬКУЛЯТОР ЖАЛЮЗИЙНОГО ЗАБОРА (СЕКЦИИ + ТАБЛИЦА)
+  // ============================================================
+  const sectionsWrap = document.getElementById('sectionsWrap');
+  const addSectionBtn = document.getElementById('addSectionBtn');
+  const addWicketBtn = document.getElementById('addWicketBtn');
+  const addGateBtn = document.getElementById('addGateBtn');
+  const wicketsWrap = document.getElementById('wicketsWrap');
+  const gatesWrap = document.getElementById('gatesWrap');
+
 
   // ===== Калитки / Ворота =====
   function createWicket(){
@@ -153,57 +204,10 @@
       return { name, height, type, span, pipe };
     });
   }
-// main.js — расчёт ТОЛЬКО по кнопкам "Рассчитать"
-document.addEventListener('DOMContentLoaded', () => {
-  // ============================================================
-  // 0) ВЫБОР КАЛЬКУЛЯТОРА (показываем только выбранный)
-  // ============================================================
-  const calcSelect = document.getElementById('calcSelect');
-  const calcItems = Array.from(document.querySelectorAll('section.calc-item[data-calc]'));
 
-  function calcTitle(sec){
-    const h2 = sec.querySelector('h2');
-    return (h2 ? h2.textContent.trim() : sec.dataset.calc);
-  }
-
-  function hideAllCalcItems(){
-    calcItems.forEach(sec => sec.classList.add('hidden'));
-  }
-
-  function showCalc(key){
-    hideAllCalcItems();
-    const sec = calcItems.find(s => s.dataset.calc === key);
-    if (sec) sec.classList.remove('hidden');
-  }
-
-  // наполняем список
-  if (calcSelect && calcItems.length){
-    calcSelect.innerHTML = '<option value="">— выберите —</option>' +
-      calcItems.map(sec => `<option value="${sec.dataset.calc}">${calcTitle(sec)}</option>`).join('');
-
-    // старт: всё скрыто
-    hideAllCalcItems();
-
-    calcSelect.addEventListener('change', () => {
-      if (!calcSelect.value){
-        hideAllCalcItems();
-      } else {
-        showCalc(calcSelect.value);
-      }
-    });
-  }
-  
-
-  
-  // ============================================================
-  // 2) КАЛЬКУЛЯТОР ЖАЛЮЗИЙНОГО ЗАБОРА (СЕКЦИИ + ТАБЛИЦА)
-  // ============================================================
-  const sectionsWrap = document.getElementById('sectionsWrap');
-  const addSectionBtn = document.getElementById('addSectionBtn');
-  const addWicketBtn = document.getElementById('addWicketBtn');
-  const addGateBtn = document.getElementById('addGateBtn');
-  const wicketsWrap = document.getElementById('wicketsWrap');
-  const gatesWrap = document.getElementById('gatesWrap');
+  // Экспортируем в window (на случай inline-обработчиков/отладки)
+  window.createWicket = createWicket;
+  window.createGate = createGate;
   const jCalcBtn = document.getElementById('j_calcBtn');
   const jErr = document.getElementById('j_err');
   const jTableWrap = document.getElementById('j_tableWrap');
@@ -413,6 +417,8 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
   lastSectionsData = null;
   lastFinalAgg = null;
 }
+  window.jResetOutput = jResetOutput;
+
 
 
   // кнопки добавления
