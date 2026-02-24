@@ -728,7 +728,8 @@ const agg = {};
 
       // базовая длина ламели
       const baseLen = g.span - 0.01 - 0.035 - (pm * 2) - 0.03;
-      const longGate = baseLen > 4;
+      // длинные ворота: если длина ворот > 4 м
+      const longGate = g.span > 4;
 
       // Ламели
       const gLamelLen = longGate
