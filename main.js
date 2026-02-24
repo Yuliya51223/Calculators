@@ -727,12 +727,13 @@ const agg = {};
       const pm = pipeSizeMeters(g.pipe);
 
       // базовая длина ламели
-      // формула: (длина ворот - (размер профтрубы*3)/2) - 0,01 - 0,035 - 0,03
-      const baseLen = (g.span - ((pm * 3) / 2)) - 0.01 - 0.035 - 0.03;
+      const baseLen = g.span - 0.01 - 0.035 - (pm * 2) - 0.03;
       const longGate = baseLen > 4;
 
       // Ламели
-      const gLamelLen = roundToCmMeters(baseLen);
+      const gLamelLen = longGate
+        ? roundToCmMeters((g.span - ((pm * 3) / 2)) - 0.01 - 0.035 - 0.03)
+        : roundToCmMeters(baseLen);
 
       const baseQty = Math.floor(((g.height - (pm * 2)) / 0.095));
       const gLamelQty = longGate ? (baseQty * 2) : baseQty;
