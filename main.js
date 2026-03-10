@@ -232,7 +232,7 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
   const jHeights = [
     0.48,0.58,0.67,0.77,0.86,0.96,1.05,1.15,1.24,1.34,
     1.43,1.53,1.62,1.72,1.81,1.91,2.00,2.10,2.19,2.29,
-    2.38,2.48,2.57,2.67,2.76,2.86,2.95,3.05
+    2.38,2.48,2.57,2.67,2.76,2.86,2.95
   ];
 
   const jDepths = [];
@@ -297,7 +297,7 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
         <div class="col">
           <div class="field">
             <label>Расстояние между столбов (м) <span class="hint">(от 0,5 до 3 м)</span></label>
-            <input class="j_span" type="number" min="0.5" max="3" step="0.01">
+            <input class="j_span" type="number" min="0.5" step="0.01">
           </div>
 
           <div class="field">
@@ -583,7 +583,7 @@ function sizeBySpan(span){
 
       if (!s.name) { jErr.textContent = `Секция ${idx}: выберите наименование`; return; }
       if (!isFinite(s.height) || s.height <= 0) { jErr.textContent = `Секция ${idx}: выберите высоту`; return; }
-      if (!isFinite(s.span) || s.span < 0.5 || s.span > 3) { jErr.textContent = `Секция ${idx}: расстояние между столбов 0,5–3 м`; return; }
+      if (!isFinite(s.span) || s.span < 0.5) { jErr.textContent = `Секция ${idx}: расстояние между столбов ≥ 0,5 м`; return; }
       if (!Number.isInteger(s.sectionsQty) || s.sectionsQty <= 0) { jErr.textContent = `Секция ${idx}: количество секций — целое > 0`; return; }
       if (!Number.isInteger(s.corners) || s.corners < 0) { jErr.textContent = `Секция ${idx}: углы — целое ≥ 0`; return; }
       if (!s.brick) { jErr.textContent = `Секция ${idx}: выберите кирпичные/бетонные столбы`; return; }
