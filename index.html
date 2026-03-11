@@ -535,7 +535,72 @@
 
 </section>
 
+
+<section class="calc-item card hidden" data-calc="insulation" id="insulation_calc">
+  <h2>Калькулятор утеплителей</h2>
+
+  <div class="grid3">
+    <div class="field">
+      <label for="i_area">Площадь (м²)</label>
+      <input id="i_area" type="number" min="0" step="0.01" value="0">
+    </div>
+
+    <div class="field">
+      <label for="i_purpose">Назначение</label>
+      <select id="i_purpose"></select>
+    </div>
+</div>
+
+  <div class="actions">
+    <button id="i_calc" type="button">Рассчитать</button>
+    <button id="i_pdf" type="button" class="hidden">Скачать PDF</button>
+  </div>
+
+  <div class="out" style="margin-top:12px;">
+    <div id="i_result"></div>
+    <div class="err" id="i_err"></div>
+  </div>
+</section>
+
+
+<section class="calc-item card hidden" data-calc="hydro" id="hydro">
+  <h2>Калькулятор гидро-пароизоляции</h2>
+
+  <div class="grid3">
+    <div class="field">
+      <label for="h_area">Площадь (м²)</label>
+      <input id="h_area" type="number" min="0" step="0.1" value="0">
+    </div>
+
+    <div class="field">
+      <label for="h_purpose">Назначение</label>
+      <select id="h_purpose">
+        <option value="">— выберите —</option>
+        <option value="facade">Фасады / наружные стены / ветрозащита утеплителя</option>
+        <option value="warm_roof">Утеплённая кровля</option>
+        <option value="cold_roof">Холодная кровля</option>
+        <option value="walls">Стены / перекрытия / перегородки</option>
+        <option value="floors">Полы / перекрытия / универсальная гидро-пароизоляция</option>
+      </select>
+    </div>
+</div>
+
+  <div class="actions">
+    <button id="h_calc" type="button">Рассчитать</button>
+    <button id="h_pdf" type="button" class="hidden">Скачать PDF</button>
+  </div>
+
+  <div class="out" style="margin-top:12px;">
+    <div id="h_result"></div>
+    <div class="err" id="h_err"></div>
+  </div>
+</section>
+
 <script src="main.js"></script>
+
+
+
+
 
 </body>
 </html>

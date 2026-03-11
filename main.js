@@ -297,7 +297,7 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
         <div class="col">
           <div class="field">
             <label>Расстояние между столбов (м) <span class="hint">(от 0,5 до 3 м)</span></label>
-            <input class="j_span" type="number" min="0.5" step="0.01">
+            <input class="j_span" type="number" min="0.5" max="3" step="0.01">
           </div>
 
           <div class="field">
@@ -583,7 +583,7 @@ function sizeBySpan(span){
 
       if (!s.name) { jErr.textContent = `Секция ${idx}: выберите наименование`; return; }
       if (!isFinite(s.height) || s.height <= 0) { jErr.textContent = `Секция ${idx}: выберите высоту`; return; }
-      if (!isFinite(s.span) || s.span < 0.5) { jErr.textContent = `Секция ${idx}: расстояние между столбов ≥ 0,5 м`; return; }
+      if (!isFinite(s.span) || s.span < 0.5 || s.span > 3) { jErr.textContent = `Секция ${idx}: расстояние между столбов 0,5–3 м`; return; }
       if (!Number.isInteger(s.sectionsQty) || s.sectionsQty <= 0) { jErr.textContent = `Секция ${idx}: количество секций — целое > 0`; return; }
       if (!Number.isInteger(s.corners) || s.corners < 0) { jErr.textContent = `Секция ${idx}: углы — целое ≥ 0`; return; }
       if (!s.brick) { jErr.textContent = `Секция ${idx}: выберите кирпичные/бетонные столбы`; return; }
@@ -728,12 +728,11 @@ const agg = {};
 
       // базовая длина ламели
       const baseLen = g.span - 0.01 - 0.035 - (pm * 2) - 0.03;
-      // длинные ворота: если длина ворот > 4 м
-      const longGate = g.span > 4;
+      const longGate = baseLen > 4;
 
       // Ламели
       const gLamelLen = longGate
-        ? roundToCmMeters((g.span - ((pm * 3) / 2)) - 0.01 - 0.035 - 0.03)
+        ? roundToCmMeters((g.span - (pm / 2)) - 0.01 - 0.035 - (pm * 2) - 0.03)
         : roundToCmMeters(baseLen);
 
       const baseQty = Math.floor(((g.height - (pm * 2)) / 0.095));
@@ -3162,6 +3161,346 @@ function downloadSoffitPdf(){
     doc.save('raschet-fasada.pdf');
   }
   if (faPdfBtn) faPdfBtn.onclick = downloadFacadePdf;
+
+
+
+  // ============================================================
+  // Гидро‑пароизоляция
+  // ============================================================
+  const hArea = document.getElementById('h_area');
+  const hPurpose = document.getElementById('h_purpose');
+  const hCalcBtn = document.getElementById('h_calc');
+  const hPdfBtn = document.getElementById('h_pdf');
+  const hRes = document.getElementById('h_result');
+  const hErr = document.getElementById('h_err');
+
+  const HYDRO_PURPOSES = {
+    facade: [
+      { id:'spanizol_a', name:'Ветроизоляция SPANIZOL A', rollArea:70, hasTape:false },
+      { id:'isospan_a', name:'Изоспан A', rollArea:70, hasTape:false },
+      { id:'gl_facade', name:'Пленка ветро-влагозащитная Grand Line Facade (75м2)', rollArea:75, hasTape:false },
+      { id:'ondutis_a100', name:'Ондутис A100', rollArea:75, hasTape:false },
+      { id:'gl_105', name:'Мембрана супердиффузионная Grand Line 105 (75м2)', rollArea:75, hasTape:false },
+    ],
+    warm_roof: [
+      { id:'spanizol_b', name:'Пароизоляция SPANIZOL B', rollArea:70, hasTape:false },
+      { id:'hidro_b', name:'Гидроизоляция B', rollArea:70, hasTape:false },
+      { id:'isospan_am', name:'Изоспан AM', rollArea:70, hasTape:false },
+      { id:'isospan_b_fix', name:'Изоспан B fix', rollArea:70, hasTape:true },
+      { id:'ondutis_r70', name:'Ондутис R70 (Ондутис Smart R70)', rollArea:75, hasTape:true },
+      { id:'gl_b_ultra', name:'Пленка пароизоляционная Grand Line B Ultra (75м2)', rollArea:75, hasTape:false },
+      { id:'gl_105', name:'Мембрана супердиффузионная Grand Line 105 (75м2)', rollArea:75, hasTape:false },
+      { id:'gl_d98', name:'Материал гидроизоляционный Grand Line D 98 (75м2)', rollArea:75, hasTape:false },
+      { id:'gl_d98_tape', name:'Материал гидроизоляционный Grand Line D 98+TAPE (75м2)', rollArea:75, hasTape:true },
+      { id:'gl_silver_tape', name:'Материал гидроизоляционный Grand Line Silver D+TAPE (75м2)', rollArea:75, hasTape:true },
+    ],
+    cold_roof: [
+      { id:'spanizol_d', name:'Гидроизоляция универсальная SPANIZOL D', rollArea:70, hasTape:false },
+      { id:'hidro_d', name:'Гидроизоляция D', rollArea:70, hasTape:false },
+      { id:'isospan_d', name:'Изоспан D', rollArea:70, hasTape:false },
+      { id:'isospan_d_fix', name:'Изоспан D fix', rollArea:70, hasTape:true },
+      { id:'ondutis_rv', name:'Ондутис RV (Ондутис Smart RV70)', rollArea:75, hasTape:true },
+      { id:'gl_d98', name:'Материал гидроизоляционный Grand Line D 98 (75м2)', rollArea:75, hasTape:false },
+      { id:'gl_d98_tape', name:'Материал гидроизоляционный Grand Line D 98+TAPE (75м2)', rollArea:75, hasTape:true },
+      { id:'gl_silver_tape', name:'Материал гидроизоляционный Grand Line Silver D+TAPE (75м2)', rollArea:75, hasTape:true },
+    ],
+    walls: [
+      { id:'spanizol_b', name:'Пароизоляция SPANIZOL B', rollArea:70, hasTape:false },
+      { id:'hidro_b', name:'Гидроизоляция B', rollArea:70, hasTape:false },
+      { id:'isospan_b_fix', name:'Изоспан B fix', rollArea:70, hasTape:true },
+      { id:'ondutis_r70', name:'Ондутис R70 (Ондутис Smart R70)', rollArea:75, hasTape:true },
+      { id:'gl_b_ultra', name:'Пленка пароизоляционная Grand Line B Ultra (75м2)', rollArea:75, hasTape:false },
+    ],
+    floors: [
+      { id:'spanizol_d', name:'Гидроизоляция универсальная SPANIZOL D', rollArea:70, hasTape:false },
+      { id:'hidro_d', name:'Гидроизоляция D', rollArea:70, hasTape:false },
+      { id:'isospan_d', name:'Изоспан D', rollArea:70, hasTape:false },
+      { id:'isospan_d_fix', name:'Изоспан D fix', rollArea:70, hasTape:true },
+    ],
+  };
+
+  const TAPE_ITEMS = [
+    { id:'isospan_kl', name:'Изоспан KL двусторонняя клейкая лента 15мм/50 п.м', rollLen:50 },
+    { id:'isospan_kl_plus', name:'Изоспан KL+ двусторонняя клейкая лента 25мм/25 п.м', rollLen:25 },
+    { id:'isospan_ml_proff', name:'Изоспан ML proff односторонняя лента усиленная 50мм/25 п.м', rollLen:25 },
+  ];
+
+  function hReset(){
+    if (hRes) hRes.innerHTML = '';
+    if (hErr) hErr.textContent = '';
+    if (hPdfBtn) hPdfBtn.classList.add('hidden');
+  }
+
+  function hCompute(){
+    hReset();
+    const area = Number(String(hArea.value||'').replace(',', '.'));
+    if (!isFinite(area) || area <= 0){ hErr.textContent = 'Введите площадь > 0'; return null; }
+
+    const p = hPurpose.value;
+    const list = HYDRO_PURPOSES[p] || [];
+    if (!list.length){ hErr.textContent = 'Выберите назначение'; return null; }
+
+    const OVERLAP_K = 1.15; // запас на нахлёсты/подрезку
+
+    const items = list.map(mat => {
+      const rolls = Math.ceil((area * OVERLAP_K) / mat.rollArea);
+
+      // Tape: if no integrated tape, add recommended tapes.
+      const tapeMeters = mat.hasTape ? 0 : Math.ceil((area / 1.6) * 1.1);
+      const tapeRows = [];
+      if (!mat.hasTape){
+        for (const t of TAPE_ITEMS){
+          tapeRows.push({ name:t.name, qty: Math.ceil(tapeMeters / t.rollLen), size: t.rollLen + ' п.м' });
+        }
+      }
+
+      return { mat, rolls, tapeMeters, tapeRows };
+    });
+
+    return { area, purposeKey: p, purposeName: (hPurpose.options[hPurpose.selectedIndex]?.textContent || ''), items };
+  }
+
+  function hRender(r){
+    const rows = [];
+    rows.push(['Назначение', r.purposeName, '', '']);
+    rows.push(['Площадь', fmt(r.area), 'м²', '']);
+    rows.push(['Запас', '15%', '', '']);
+
+    r.items.forEach(it => {
+      rows.push(['Материал', it.mat.name, '', '']);
+      rows.push(['Рулоны', String(it.rolls), it.mat.rollArea + ' м²/рулон', 'С запасом 15%']);
+      if (!it.mat.hasTape){
+        rows.push(['Ленты (рекоменд.)', it.tapeMeters + ' п.м', 'расчётно', '']);
+        it.tapeRows.forEach(tr => rows.push([tr.name, String(tr.qty), tr.size, '']));
+      }
+    });
+
+    const table = `
+      <table class="mp-table">
+        <thead><tr><th>Позиция</th><th>Кол-во</th><th>Размер</th><th>Примечание</th></tr></thead>
+        <tbody>${rows.map(rr=>`<tr><td>${rr[0]}</td><td>${rr[1]}</td><td>${rr[2]}</td><td>${rr[3]}</td></tr>`).join('')}</tbody>
+      </table>
+    `;
+    hRes.innerHTML = table;
+    hPdfBtn.classList.remove('hidden');
+  }
+
+  function downloadHydroPdf(r){
+    if (!window.jspdf?.jsPDF) return;
+    const doc = new window.jspdf.jsPDF({ unit:'mm', format:'a4' });
+
+    const hasMontserrat = (typeof loadMontserrat === 'function') ? loadMontserrat(doc) : false;
+    doc.setFont(hasMontserrat ? 'Montserrat' : 'helvetica', 'normal');
+
+    doc.setFontSize(14);
+    doc.text('Калькулятор гидро‑пароизоляции', 14, 14);
+
+    const head = [['Позиция','Кол-во','Размер','Примечание']];
+    const body = [];
+
+    body.push(['Назначение', r.purposeName, '', '']);
+    body.push(['Площадь', fmt(r.area), 'м²', '']);
+    body.push(['Запас', '15%', '', '']);
+
+    r.items.forEach(it => {
+      body.push(['Материал', it.mat.name, '', '']);
+      body.push(['Рулоны', String(it.rolls), it.mat.rollArea + ' м²/рулон', 'С запасом 15%']);
+      if (!it.mat.hasTape){
+        body.push(['Ленты (рекоменд.)', it.tapeMeters + ' п.м', 'расчётно', '']);
+        it.tapeRows.forEach(tr => body.push([tr.name, String(tr.qty), tr.size, '']));
+      }
+    });
+
+    if (doc.autoTable){
+      doc.autoTable({
+        head,
+        body,
+        startY: 20,
+        theme:'grid',
+        styles:{ font: (hasMontserrat ? 'Montserrat' : 'helvetica'), fontSize:8, cellPadding:2, lineColor:[0,0,0], lineWidth:0.2 },
+        headStyles:{ fillColor:[240,240,240], textColor:[0,0,0], lineColor:[0,0,0], lineWidth:0.2 }
+      });
+    }
+
+    doc.save('gidro-paroizolyaciya.pdf');
+  }
+
+  // ============================================================
+  // INSULATION_CALC (утеплители)
+  // ============================================================
+  const iArea = document.getElementById('i_area');
+  const iPurpose = document.getElementById('i_purpose');
+  const iCalcBtn = document.getElementById('i_calc');
+  const iPdfBtn = document.getElementById('i_pdf');
+  const iRes = document.getElementById('i_result');
+  const iErr = document.getElementById('i_err');
+
+  const INS_PURPOSES = [
+    { key:'facade', name:'Фасады / наружные стены', materials:[
+      { name:'Технониколь Техноблок Стандарт', packArea:5.76, kind:'pack' },
+      { name:'Пеноплекс', packArea:5.76, kind:'pack' },
+      { name:'Базальтовая плита СТАНДАРТ', packArea:5.76, kind:'pack' },
+    ]},
+    { key:'roof_warm', name:'Утеплённая скатная кровля', materials:[
+      { name:'ISOVER Каркас-П37', packArea:15.0, kind:'pack' },
+      { name:'URSA Terra 35 QN Скатная', packArea:16.0, kind:'roll' },
+      { name:'Технониколь Роклайт', packArea:5.76, kind:'pack' },
+      { name:'ROCKWOOL Скандик', packArea:5.76, kind:'pack' },
+      { name:'Изорок Ультралайт ПП-33', packArea:5.76, kind:'pack' },
+      { name:'НЕМАН М-11 лайт', packArea:15.0, kind:'roll' },
+      { name:'НЕМАН М-11', packArea:15.0, kind:'roll' },
+      { name:'Изорок ПП-80', packArea:2.88, kind:'pack' },
+    ]},
+    { key:'attic_cold', name:'Холодный чердак / перекрытия', materials:[
+      { name:'Технониколь Роклайт', packArea:5.76, kind:'pack' },
+      { name:'ROCKWOOL Скандик', packArea:5.76, kind:'pack' },
+      { name:'ISOVER Каркас-П37', packArea:15.0, kind:'pack' },
+      { name:'НЕМАН М-11 лайт', packArea:15.0, kind:'roll' },
+      { name:'НЕМАН М-11', packArea:15.0, kind:'roll' },
+      { name:'URSA П-15', packArea:16.0, kind:'pack' },
+      { name:'НЕМАН П-15', packArea:16.0, kind:'pack' },
+      { name:'Базальтовая плита', packArea:5.76, kind:'pack' },
+    ]},
+    { key:'frame', name:'Каркасные стены / перегородки', materials:[
+      { name:'ISOVER Каркас-П37', packArea:15.0, kind:'pack' },
+      { name:'Технониколь Роклайт', packArea:5.76, kind:'pack' },
+      { name:'ROCKWOOL Скандик', packArea:5.76, kind:'pack' },
+      { name:'URSA П-15', packArea:16.0, kind:'pack' },
+      { name:'НЕМАН П-15', packArea:16.0, kind:'pack' },
+      { name:'Изорок Изолайт', packArea:5.76, kind:'pack' },
+      { name:'Изорок Ультралайт ПП-33', packArea:5.76, kind:'pack' },
+      { name:'Изорок ПП-80', packArea:2.88, kind:'pack' },
+      { name:'Базальтовая плита', packArea:5.76, kind:'pack' },
+    ]},
+    { key:'acoustic', name:'Звукоизоляция', materials:[
+      { name:'ROCKWOOL Акустик', packArea:5.76, kind:'pack' },
+      { name:'ISOVER Каркас-П37', packArea:15.0, kind:'pack' },
+      { name:'Базальтовая плита', packArea:5.76, kind:'pack' },
+    ]},
+    { key:'vent_facade', name:'Вентилируемый фасад', materials:[
+      { name:'Технониколь Техновент Экстра', packArea:2.88, kind:'pack' },
+      { name:'Базальтовая плита ОПТИМАЛ', packArea:5.76, kind:'pack' },
+    ]},
+    { key:'dense', name:'Плотные базальтовые плиты', materials:[
+      { name:'Изорок ПП-80', packArea:2.88, kind:'pack' },
+    ]},
+    { key:'foundation', name:'Фундамент / цоколь / пол', materials:[
+      { name:'Пеноплекс 30', packArea:5.76, kind:'pack' },
+      { name:'Пеноплекс 50', packArea:5.76, kind:'pack' },
+      { name:'Изорок ПП-80', packArea:2.88, kind:'pack' },
+    ]},
+  ];
+
+  function iFillPurposes(){
+    if (!iPurpose) return;
+    iPurpose.innerHTML = INS_PURPOSES.map(p=>`<option value="${p.key}">${p.name}</option>`).join('');
+  }
+
+  function iGetPurpose(){
+    return INS_PURPOSES.find(x=>x.key===iPurpose.value) || INS_PURPOSES[0];
+  }
+
+  function iComputeAll(){
+    if (!iArea || !iPurpose) return null;
+    const area = n(iArea.value);
+    if (!isFinite(area) || area<=0){ iErr.textContent='Введите площадь'; return null; }
+    const purpose = iGetPurpose();
+
+    const K = 1.10; // запас на подрезку/стыки
+    const items = purpose.materials.map(mat => {
+      const qty = Math.ceil((area * K) / mat.packArea);
+      const unitWord = (mat.kind === 'roll') ? 'рулонов' : 'упаковок';
+      return { name: mat.name, packArea: mat.packArea, kind: mat.kind, qty, unitWord };
+    });
+    return { area, purpose, K, items };
+  }
+
+  function iRender(r){
+    const headRows = [
+      ['Площадь', fmt(r.area), 'м²', ''],
+      ['Назначение', r.purpose.name, '', ''],
+      ['Запас', (Math.round((r.K-1)*100)) + '%', '', ''],
+    ];
+
+    iRes.innerHTML = `
+      <table class="mp-table">
+        <thead><tr><th>Позиция</th><th>Значение</th><th>Ед.</th></tr></thead>
+        <tbody>
+          ${headRows.map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td><td>${x[2]}</td></tr>`).join('')}
+        </tbody>
+      </table>
+
+      <div style="height:10px;"></div>
+
+      <table class="mp-table">
+        <thead><tr><th>Материал</th><th>Кол-во</th><th>Ед.</th></tr></thead>
+        <tbody>
+          ${r.items.map(it=>`<tr><td>${it.name}</td><td>${it.qty}</td><td>${it.unitWord}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    `;
+    iPdfBtn.classList.remove('hidden');
+  }
+
+  function downloadInsulationPdf(r){
+    const doc = pdfDoc();
+    if (!doc) { iErr.textContent='PDF не может быть создан'; return; }
+    pdfSetFont(doc);
+    doc.setFontSize(14);
+    doc.text('Калькулятор утеплителей', 14, 14);
+
+    doc.setFontSize(10);
+    doc.autoTable({
+      startY: 22,
+      head: [['Параметр','Значение']],
+      body: [
+        ['Площадь', `${fmt(r.area)} м²`],
+        ['Назначение', r.purpose.name],
+        ['Запас', `${Math.round((r.K-1)*100)}%`],
+      ],
+      theme:'grid',
+      styles:{ font:'Montserrat', fontSize:9, cellPadding:2, lineColor:[0,0,0], lineWidth:0.2 },
+      headStyles:{ fillColor:[240,240,240], textColor:[0,0,0], lineColor:[0,0,0], lineWidth:0.2 },
+      margin:{ left:14, right:14 }
+    });
+
+    doc.autoTable({
+      startY: doc.lastAutoTable.finalY + 6,
+      head: [['Материал','Кол-во','Ед.','Примечание']],
+      body: r.items.map(it => ([it.name, String(it.qty), it.unitWord, `по ${it.packArea} м²/ед.`])),
+      theme:'grid',
+      styles:{ font:'Montserrat', fontSize:8, cellPadding:2, lineColor:[0,0,0], lineWidth:0.2 },
+      headStyles:{ fillColor:[240,240,240], textColor:[0,0,0], lineColor:[0,0,0], lineWidth:0.2 },
+      margin:{ left:14, right:14 }
+    });
+
+    doc.save('utepliteli.pdf');
+  }
+
+  if (iPurpose){
+    iFillPurposes();
+    iRes.innerHTML='';
+    iErr.textContent='';
+    iPdfBtn.classList.add('hidden');
+    iPurpose.addEventListener('change', () => {
+      iRes.innerHTML='';
+      iErr.textContent='';
+      iPdfBtn.classList.add('hidden');
+    });
+  }
+
+  if (iCalcBtn) iCalcBtn.addEventListener('click', () => {
+    iErr.textContent='';
+    const r = iComputeAll();
+    if (r) iRender(r);
+  });
+
+  if (iPdfBtn) iPdfBtn.addEventListener('click', () => {
+    iErr.textContent='';
+    const r = iComputeAll();
+    if (r) downloadInsulationPdf(r);
+  });
+
 
 });
 sCalcBtn?.addEventListener('click', sCalc);
