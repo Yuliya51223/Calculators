@@ -217,7 +217,7 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
   let sectionIndex = 0;
 
   const BOM_ITEMS = [
-    { key: 'lamel', label: 'Ламель Хоста' },
+    { key: 'lamel', label: 'Ламели' },
     { key: 'stoyka', label: 'Стойка' },
     { key: 'krepezh', label: 'Крепежная планка' },
     { key: 'kryshka', label: 'Крышка' },
