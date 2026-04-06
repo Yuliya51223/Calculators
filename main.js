@@ -674,18 +674,26 @@ function arcHeightAtX(span, edgeH, centerH, x){
 
 // ====== РЯД (float -> сглаживание -> -10 -> центр -> округление) ======
 function buildCenteredPlankPositions(span, plankW, gap){
-  const P = plankW + gap;
-  if (!isFinite(P) || P <= 0) return [];
+  const desiredPitch = plankW + gap;
+  if (!isFinite(desiredPitch) || desiredPitch <= 0) return [];
 
-  const N = Math.floor((span + gap) / P);
-  if (N <= 0) return [];
+  // Логика как в исходном калькуляторе арки:
+  // 1) количество реек берём по желаемому шагу, но округляем вверх;
+  // 2) затем фактический зазор пересчитываем так, чтобы рейки заполнили пролёт симметрично.
+  let N = Math.ceil((span + gap) / desiredPitch);
+  if (!isFinite(N) || N <= 0) return [];
 
-  const center = span / 2;
-  const mid = (N - 1) / 2;
+  // Защита от невозможного количества реек.
+  const maxByWidth = Math.floor(span / plankW);
+  if (maxByWidth <= 0) return [];
+  if (N > maxByWidth) N = maxByWidth;
+
+  const actualGap = (N > 1) ? ((span - N * plankW) / (N - 1)) : 0;
+  const actualPitch = plankW + actualGap;
   const positions = [];
 
   for (let i = 0; i < N; i++){
-    positions.push(center + (i - mid) * P);
+    positions.push((plankW / 2) + i * actualPitch);
   }
 
   return positions;
