@@ -1,4 +1,4 @@
-
+// main.js — расчёт ТОЛЬКО по кнопкам "Рассчитать"
 document.addEventListener('DOMContentLoaded', () => {
   // ============================================================
   // 0) ВЫБОР КАЛЬКУЛЯТОРА (показываем только выбранный)
@@ -45,160 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================================
   const sectionsWrap = document.getElementById('sectionsWrap');
   const addSectionBtn = document.getElementById('addSectionBtn');
-  const addWicketBtn = document.getElementById('addWicketBtn');
-  const addGateBtn = document.getElementById('addGateBtn');
-  const wicketsWrap = document.getElementById('wicketsWrap');
-  const gatesWrap = document.getElementById('gatesWrap');
-
-
-  // ===== Калитки / Ворота =====
-  function createWicket(){
-    const idx = wicketsWrap.querySelectorAll('.j-wicket').length + 1;
-    const div = document.createElement('div');
-    div.className = 'calc-block j-wicket';
-    div.innerHTML = `
-      <div class="section-header">
-        <div class="section-title">Калитка ${idx}</div>
-        <button type="button" class="remove-section j_removeWicket">Удалить</button>
-      </div>
-
-      <div class="grid3">
-        <div class="field">
-          <label>Наименование забора</label>
-          <select class="w_name">
-            <option value="yukka">Юкка</option>
-            <option value="hosta">Хоста</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Высота калитки, м</label>
-          <input class="w_height" type="number" min="0" step="0.01" value="0">
-        </div>
-
-        <div class="field">
-          <label>Расстояние между столбов под калитку, м</label>
-          <input class="w_span" type="number" min="0" step="0.01" value="0">
-        </div>
-
-        <div class="field">
-          <label>Размер профтрубы на калитку</label>
-          <select class="w_pipe">
-            <option value="40x60">40×60</option>
-            <option value="60x60">60×60</option>
-            <option value="80x80">80×80</option>
-          </select>
-        </div>
-      </div>
-    `;
-
-    div.querySelector('.j_removeWicket').addEventListener('click', () => {
-      div.remove();
-      updateWicketTitles();
-      jResetOutput();
-    });
-
-    div.querySelectorAll('input, select').forEach(el => {
-      el.addEventListener('input', jResetOutput);
-      el.addEventListener('change', jResetOutput);
-    });
-
-    wicketsWrap.appendChild(div);
-    updateWicketTitles();
-  }
-
-  function createGate(){
-    const idx = gatesWrap.querySelectorAll('.j-gate').length + 1;
-    const div = document.createElement('div');
-    div.className = 'calc-block j-gate';
-    div.innerHTML = `
-      <div class="section-header">
-        <div class="section-title">Ворота ${idx}</div>
-        <button type="button" class="remove-section j_removeGate">Удалить</button>
-      </div>
-
-      <div class="grid3">
-        <div class="field">
-          <label>Наименование забора</label>
-          <select class="g_name">
-            <option value="yukka">Юкка</option>
-            <option value="hosta">Хоста</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Высота ворот, м</label>
-          <input class="g_height" type="number" min="0" step="0.01" value="0">
-        </div>
-<div class="field">
-          <label>Расстояние между столбов под ворота, м</label>
-          <div class="hint">Если длина ворот более 4 м, будет добавлена дополнительная труба посередине</div>
-          <input class="g_span" type="number" min="0" step="0.01" value="0">
-        </div>
-
-        <div class="field">
-          <label>Размер профтрубы на ворота</label>
-          <select class="g_pipe">
-            <option value="60x60">60×60</option>
-            <option value="80x80">80×80</option>
-          </select>
-        </div>
-      </div>
-    `;
-
-    div.querySelector('.j_removeGate').addEventListener('click', () => {
-      div.remove();
-      updateGateTitles();
-      jResetOutput();
-    });
-
-    div.querySelectorAll('input, select').forEach(el => {
-      el.addEventListener('input', jResetOutput);
-      el.addEventListener('change', jResetOutput);
-    });
-
-    gatesWrap.appendChild(div);
-    updateGateTitles();
-  }
-
-  function updateWicketTitles(){
-    wicketsWrap.querySelectorAll('.j-wicket').forEach((w, i) => {
-      const t = w.querySelector('.section-title');
-      if (t) t.textContent = `Калитка ${i+1}`;
-    });
-  }
-
-  function updateGateTitles(){
-    gatesWrap.querySelectorAll('.j-gate').forEach((g, i) => {
-      const t = g.querySelector('.section-title');
-      if (t) t.textContent = `Ворота ${i+1}`;
-    });
-  }
-
-  function getWicketsData(){
-    return Array.from(wicketsWrap.querySelectorAll('.j-wicket')).map(w => {
-      const name = w.querySelector('.w_name')?.value || 'yukka';
-      const height = Number((w.querySelector('.w_height')?.value || '').replace(',', '.'));
-      const span = Number((w.querySelector('.w_span')?.value || '').replace(',', '.'));
-      const pipe = w.querySelector('.w_pipe')?.value || '60x60';
-      return { name, height, span, pipe };
-    });
-  }
-
-  function getGatesData(){
-    return Array.from(gatesWrap.querySelectorAll('.j-gate')).map(g => {
-      const name = g.querySelector('.g_name')?.value || 'yukka';
-      const height = Number((g.querySelector('.g_height')?.value || '').replace(',', '.'));
-
-      const span = Number((g.querySelector('.g_span')?.value || '').replace(',', '.'));
-      const pipe = g.querySelector('.g_pipe')?.value || '60x60';
-      return { name, height, span, pipe };
-    });
-  }
-
-  // Экспортируем в window (на случай inline-обработчиков/отладки)
-  window.createWicket = createWicket;
-  window.createGate = createGate;
   const jCalcBtn = document.getElementById('j_calcBtn');
   const jErr = document.getElementById('j_err');
   const jTableWrap = document.getElementById('j_tableWrap');
@@ -206,8 +52,6 @@ const jPdfBtn = document.getElementById('j_pdfBtn');
 
 // последнее рассчитанное (для PDF)
 let lastSectionsData = null;
-let lastWicketsData = null;
-let lastGatesData = null;
 let lastFinalAgg = null;
 
   // Если второй калькулятор отсутствует на странице — просто выходим
@@ -217,7 +61,7 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
   let sectionIndex = 0;
 
   const BOM_ITEMS = [
-    { key: 'lamel', label: 'Ламели' },
+    { key: 'lamel', label: 'Ламель Хоста' },
     { key: 'stoyka', label: 'Стойка' },
     { key: 'krepezh', label: 'Крепежная планка' },
     { key: 'kryshka', label: 'Крышка' },
@@ -361,43 +205,6 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
       el.addEventListener('change', jResetOutput);
     });
 
-
-    // --- UI rules ---
-    const brickSel = div.querySelector('.j_brick');
-    const pipeSel  = div.querySelector('.j_pipe');
-    const depthSel = div.querySelector('.j_depth');
-    const pipeField  = pipeSel ? pipeSel.closest('.field') : null;
-    const depthField = depthSel ? depthSel.closest('.field') : null;
-
-    function applyJaluziUiRules(){
-      const brickNo = brickSel && brickSel.value === 'no';
-
-      // 1) Размер профтрубы: скрыт по умолчанию, показываем только если кирп/бетон = НЕТ
-      if (pipeField){
-        pipeField.classList.toggle('hidden', !brickNo);
-      }
-      if (!brickNo && pipeSel){
-        pipeSel.value = 'none';
-      }
-
-      // 2) Заглубление: скрыто по умолчанию, показываем только если профтруба 60х60 или 80х80
-      const pipeVal = pipeSel ? pipeSel.value : 'none';
-      const showDepth = (pipeVal === '60x60' || pipeVal === '80x80');
-      if (depthField){
-        depthField.classList.toggle('hidden', !showDepth);
-      }
-      if (!showDepth && depthSel){
-        depthSel.value = '';
-      }
-    }
-
-    if (brickSel) brickSel.addEventListener('change', applyJaluziUiRules);
-    if (pipeSel) pipeSel.addEventListener('change', applyJaluziUiRules);
-
-    // apply on init
-    applyJaluziUiRules();
-
-
     updateSectionTitles();
   }
 
@@ -408,18 +215,13 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
   lastSectionsData = null;
   lastFinalAgg = null;
 }
-  window.jResetOutput = jResetOutput;
 
-
-
-  // кнопки добавления
-  if (addSectionBtn) addSectionBtn.addEventListener('click', () => { createSection(); jResetOutput(); });
-  if (addWicketBtn) addWicketBtn.addEventListener('click', () => { createWicket(); jResetOutput(); });
-  if (addGateBtn) addGateBtn.addEventListener('click', () => { createGate(); jResetOutput(); });
 
   // первая секция при загрузке
-  try { createSection(); } catch(e){ console.error(e); }
+  createSection();
 
+  // кнопка "Добавить секцию"
+  addSectionBtn.addEventListener('click', () => createSection());
 
   // ===== РЕНДЕР ТАБЛИЦЫ =====
   function esc(s){
@@ -480,7 +282,7 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
       const height = Number((sec.querySelector('.j_height')?.value || '').replace(',', '.'));
       const span = Number(sec.querySelector('.j_span')?.value);
       const sectionsQty = Number(sec.querySelector('.j_sections')?.value);
-      const corners = Number(((sec.querySelector('.j_corners')?.value || '0') + '').replace(',', '.'));
+      const corners = Number(sec.querySelector('.j_corners')?.value);
       const brick = sec.querySelector('.j_brick')?.value || '';
       const pipe = sec.querySelector('.j_pipe')?.value || ''; // none / 60x60 / 80x80
       const depth = Number((sec.querySelector('.j_depth')?.value || '').replace(',', '.'));
@@ -489,16 +291,6 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
   }
 
   function roundToCmMeters(x){ return Number(x.toFixed(2)); } // до 0,01 м
-
-  function pipeSizeMeters(val){
-    // '60x60'/'80x80'/'40x60' etc -> meters (max side)
-    if (!val) return 0;
-    const v = String(val).replace('×','x');
-    const parts = v.split('x').map(s=>Number(String(s).replace(/[^0-9.]/g,'')));
-    const mx = Math.max(...parts.filter(n=>isFinite(n) && n>0));
-    return isFinite(mx) ? (mx/1000) : 0;
-  }
-
 
   function sizeByHeight(h){
     if (h <= 2) return 2;
@@ -568,9 +360,6 @@ function sizeBySpan(span){
     jResetOutput();
 
     const data = getAllSectionsData();
-
-    const wicketsData = getWicketsData();
-    const gatesData = getGatesData();
     if (!data.length) {
       jErr.textContent = 'Нет секций для расчёта';
       return;
@@ -588,33 +377,10 @@ function sizeBySpan(span){
       if (!Number.isInteger(s.corners) || s.corners < 0) { jErr.textContent = `Секция ${idx}: углы — целое ≥ 0`; return; }
       if (!s.brick) { jErr.textContent = `Секция ${idx}: выберите кирпичные/бетонные столбы`; return; }
       if (!s.pipe) { jErr.textContent = `Секция ${idx}: выберите размер профтрубы`; return; }
-      // Заглубление требуется только если поле показывается (проф труба 60×60 или 80×80 и кирп/бетон = нет)
-      const needDepth = (s.brick === 'no') && (s.pipe === '60x60' || s.pipe === '80x80');
-      if (needDepth) {
-        if (!isFinite(s.depth) || s.depth < 0.3 || s.depth > 1.5) { jErr.textContent = `Секция ${idx}: заглубление 0,3–1,5 м`; return; }
-      }
+      if (!isFinite(s.depth) || s.depth < 0.3 || s.depth > 1.5) { jErr.textContent = `Секция ${idx}: заглубление 0,3–1,5 м`; return; }
     }
 
-    
-    // ===== Валидация калиток =====
-    for (const [i, w] of wicketsData.entries()){
-      const idx = i + 1;
-      if (!isFinite(w.height) || w.height <= 0) { jErr.textContent = `Калитка ${idx}: высота`; return; }
-      if (!isFinite(w.span) || w.span <= 0) { jErr.textContent = `Калитка ${idx}: расстояние между столбов`; return; }
-      const pm = pipeSizeMeters(w.pipe);
-      if (!isFinite(pm) || pm <= 0) { jErr.textContent = `Калитка ${idx}: размер профтрубы`; return; }
-    }
-
-    // ===== Валидация ворот =====
-    for (const [i, g] of gatesData.entries()){
-      const idx = i + 1;
-      if (!isFinite(g.height) || g.height <= 0) { jErr.textContent = `Ворота ${idx}: высота`; return; }
-      if (!isFinite(g.span) || g.span <= 0) { jErr.textContent = `Ворота ${idx}: расстояние между столбов`; return; }
-      const pm = pipeSizeMeters(g.pipe);
-      if (!isFinite(pm) || pm <= 0) { jErr.textContent = `Ворота ${idx}: размер профтрубы`; return; }
-    }
-
-const agg = {};
+    const agg = {};
 
     data.forEach(s => {
       // Ламели
@@ -629,8 +395,9 @@ const agg = {};
 
       // Крепежная планка
       const krepezhSize = sizeByHeightStoykaKrepezh(s.height);
-      // формула: расстояние между столбов / 1 * кол-во секций (округляем вверх)
-      const krepezhQty = Math.floor((s.span / 1) * s.sectionsQty);
+      const fenceLen = s.span * s.sectionsQty;
+      const krepezhMultiplier = (fenceLen > 3) ? 2 : 1; // если длина забора (суммарно по секциям) > 3 м, крепежных планок в 2 раза больше
+      const krepezhQty = Math.ceil((s.span / 0.5)) * 2 * krepezhMultiplier * s.sectionsQty; // расстояние между столбов / 0,5 * 2 (если длина >3м) * кол-во секций, округление вверх
       addAgg(agg, 'krepezh', krepezhSize, krepezhQty);
 
       // Крышка
@@ -639,14 +406,14 @@ const agg = {};
       addAgg(agg, 'kryshka', kryshkaSize, kryshkaQty);
 
       // Декоративная накладка (если столбы НЕ кирп/бетон)
-      if (s.brick === 'no' && s.pipe !== 'none') {
+      if (s.brick === 'no') {
         const dekorSize = sizeByHeightDekor(s.height);
-        const dekorQty = Math.max(0, (s.sectionsQty * 2) + 2);
+        const dekorQty = (s.sectionsQty + 1) * 2 - (s.corners * 2);
         addAgg(agg, 'dekor', dekorSize, dekorQty);
       }
 
       // Угловая декоративная накладка (если углы > 0)
-      if (isFinite(s.corners) && s.corners !== 0) {
+      if (s.corners > 0) {
         const dekorUSize = sizeByHeightDekor(s.height);
         const dekorUQty = s.corners;
         addAgg(agg, 'dekor_ugol', dekorUSize, dekorUQty);
@@ -660,14 +427,12 @@ const agg = {};
       // Профтруба (если выбрано не "нет")
       let profftrubaQty = 0;
       if (s.pipe !== 'none') {
-        profftrubaQty = Math.ceil(((s.sectionsQty + 1) * (s.height + s.depth)) / 6);
-        addAgg(agg, 'profftruba', s.pipe, profftrubaQty);
+        profftrubaQty = Math.ceil((2 * (s.height + s.depth)) / 6);
+        addAgg(agg, 'profftruba', 6, profftrubaQty);
       }
 
-      // Саморезы для стойки (не считаем, если профтруба = нет)
-      if (s.pipe !== 'none') {
-        addAgg(agg, 'screw_stoyka', '5.5x19', stoykaQty * 5);
-      }
+      // Саморезы для стойки
+      addAgg(agg, 'screw_stoyka', '5.5x19', stoykaQty * 5);
 
       // Саморезы ПШ
       const screwPSHQty =
@@ -680,137 +445,9 @@ const agg = {};
       addAgg(agg, 'screw_psh', '4.2x16', screwPSHQty);
     });
 
-    
-    // ===== Расчёт калиток =====
-    wicketsData.forEach(w => {
-      const pm = pipeSizeMeters(w.pipe);
-
-      // Ламели
-      const wLamelQty = Math.floor(((w.height - (pm * 2)) / 0.095));
-      const wLamelSize = roundToCmMeters(w.span - 0.01 - 0.035 - (pm * 2) - 0.03);
-      addAgg(agg, 'lamel', wLamelSize, wLamelQty);
-
-      // Стойка
-      const wStoykaSize = sizeByHeightStoykaKrepezh(w.height);
-      const wStoykaQty = 2;
-      addAgg(agg, 'stoyka', wStoykaSize, wStoykaQty);
-
-      // Крышка
-      const wKryshkaSize = sizeBySpan(w.span);
-      const wKryshkaQty = 1;
-      addAgg(agg, 'kryshka', wKryshkaSize, wKryshkaQty);
-
-      // Декоративная накладка
-      const wDekorSize = sizeByHeightDekor(w.height);
-      const wDekorQty = 4;
-      addAgg(agg, 'dekor', wDekorSize, wDekorQty);
-
-      // Планка завершающая
-      const wFinishSize = sizeBySpan(w.span);
-      const wFinishQty = 1;
-      addAgg(agg, 'finish', wFinishSize, wFinishQty);
-
-      // Профтруба 6 м
-      const wProffQty = Math.ceil(((w.height * 2) + (w.span - 0.035 - (pm * 2) - 0.03)) / 6);
-      addAgg(agg, 'profftruba', w.pipe, wProffQty);
-
-      // Саморезы для стойки
-      addAgg(agg, 'screw_stoyka', '5.5x19', wStoykaQty * 5);
-
-      // Саморезы ПШ
-      const wPSHQty = (wLamelQty * 4) + (wKryshkaQty * 4) + (wFinishQty * 2);
-      addAgg(agg, 'screw_psh', '4.2x16', wPSHQty);
-    });
-
-    // ===== Расчёт ворот =====
-    gatesData.forEach(g => {
-      const pm = pipeSizeMeters(g.pipe);
-
-      // базовая длина ламели
-      const baseLen = g.span - 0.01 - 0.035 - (pm * 2) - 0.03;
-      const longGate = baseLen > 4;
-
-      // Ламели
-      const gLamelLen = longGate
-        ? roundToCmMeters((g.span - (pm / 2)) - 0.01 - 0.035 - (pm * 2) - 0.03)
-        : roundToCmMeters(baseLen);
-
-      const baseQty = Math.floor(((g.height - (pm * 2)) / 0.095));
-      const gLamelQty = longGate ? (baseQty * 2) : baseQty;
-      addAgg(agg, 'lamel', gLamelLen, gLamelQty);
-
-      // Стойка
-      const gStoykaSize = sizeByHeightStoykaKrepezh(g.height);
-      const gStoykaQty = longGate ? 4 : 2;
-      addAgg(agg, 'stoyka', gStoykaSize, gStoykaQty);
-
-      // Крепежная планка
-      const gKrepezhSize = sizeByHeightStoykaKrepezh(g.height);
-      const gKrepezhQty = Math.floor((g.span / 1));
-      addAgg(agg, 'krepezh', gKrepezhSize, gKrepezhQty);
-
-      // Крышка + Планка завершающая
-      let gKryshkaQty = 0, gKryshkaSize = 0;
-      let gFinishQty = 0, gFinishSize = 0;
-
-      if (!longGate){
-        if (gLamelLen <= 3){
-          gKryshkaQty = 1; gKryshkaSize = 3;
-          gFinishQty  = 1; gFinishSize  = 3;
-        } else {
-          gKryshkaQty = 2; gKryshkaSize = 2;
-          gFinishQty  = 2; gFinishSize  = 2;
-        }
-      } else {
-        const Lr = Number(gLamelLen.toFixed(2));
-        const isInt = Math.abs(Lr - Math.round(Lr)) < 1e-9;
-        const isEven = isInt && (Math.round(Lr) % 2 === 0);
-
-        if (isEven){
-          gKryshkaQty = Math.max(1, Math.round(Lr / 2));
-          gKryshkaSize = 2;
-          gFinishQty = gKryshkaQty;
-          gFinishSize = 2;
-        } else {
-          gKryshkaQty = Math.max(1, Math.ceil(Lr / 3));
-          gKryshkaSize = 3;
-          gFinishQty = gKryshkaQty;
-          gFinishSize = 3;
-        }
-      }
-
-      addAgg(agg, 'kryshka', gKryshkaSize, gKryshkaQty);
-      addAgg(agg, 'finish', gFinishSize, gFinishQty);
-
-      // Декоративная накладка
-      const gDekorSize = sizeByHeightDekor(g.height);
-      const gDekorQty = longGate ? 6 : 4;
-      addAgg(agg, 'dekor', gDekorSize, gDekorQty);
-
-      // Профтруба 6 м
-      const gProffQty = Math.ceil(((g.height * 2) + (g.span - 0.035 - (pm * 2) - 0.03)) / 6);
-      addAgg(agg, 'profftruba', g.pipe, gProffQty);
-
-      // Саморезы для стойки
-      addAgg(agg, 'screw_stoyka', '5.5x19', gStoykaQty * 5);
-
-      // Саморезы ПШ
-      const gPSHQty =
-        (gLamelQty * 4) +
-        (gKrepezhQty * gLamelQty) +
-        (gKryshkaQty * 4) +
-        (gKryshkaQty * gKrepezhQty) +
-        (gFinishQty * 2) +
-        (gFinishQty * gKrepezhQty);
-
-      addAgg(agg, 'screw_psh', '4.2x16', gPSHQty);
-    });
-
-const finalAgg = finalizeAgg(agg);
+    const finalAgg = finalizeAgg(agg);
     renderBOMTable(finalAgg);
     lastSectionsData = data;
-lastWicketsData = wicketsData;
-lastGatesData = gatesData;
 lastFinalAgg = finalAgg;
 jPdfBtn.classList.remove('hidden');
   }
@@ -911,52 +548,6 @@ function downloadJaluziPdf(){
 
   margin: { left: 14, right: 14 }
 });
-
-
-  
-  // ===== Таблица введённых данных по калиткам =====
-  if (lastWicketsData && lastWicketsData.length){
-    const wHead = [[ 'Калитка', 'Наименование', 'Высота, м', 'Расст. между, м', 'Проф труба' ]];
-    const wBody = lastWicketsData.map((w, i) => ([
-      String(i+1),
-      w.name === 'yukka' ? 'Юкка' : (w.name === 'hosta' ? 'Хоста' : w.name),
-      String(w.height).replace('.', ','),
-      String(w.span).replace('.', ','),
-      String(w.pipe).replace('x','×')
-    ]));
-    doc.autoTable({
-      head: wHead,
-      body: wBody,
-      startY: doc.lastAutoTable.finalY + 6,
-      theme: 'grid',
-      styles: { font: 'Montserrat', fontSize: 8, cellPadding: 2, halign: 'center', valign: 'middle', lineColor:[0,0,0], lineWidth:0.2 },
-      headStyles:{ font:'Montserrat', fillColor:[220,220,220], textColor:[0,0,0], lineColor:[0,0,0], lineWidth:0.3, fontSize:8 },
-      alternateRowStyles:{ fillColor:[245,245,245] },
-      margin:{ left:14, right:14 }
-    });
-  }
-
-  // ===== Таблица введённых данных по воротам =====
-  if (lastGatesData && lastGatesData.length){
-    const gHead = [[ 'Ворота', 'Наименование', 'Высота, м', 'Расст. между, м', 'Проф труба' ]];
-    const gBody = lastGatesData.map((g, i) => ([
-      String(i+1),
-      g.name === 'yukka' ? 'Юкка' : (g.name === 'hosta' ? 'Хоста' : g.name),
-      String(g.height).replace('.', ','),
-            String(g.span).replace('.', ','),
-      String(g.pipe).replace('x','×')
-    ]));
-    doc.autoTable({
-      head: gHead,
-      body: gBody,
-      startY: doc.lastAutoTable.finalY + 6,
-      theme: 'grid',
-      styles: { font: 'Montserrat', fontSize: 8, cellPadding: 2, halign: 'center', valign: 'middle', lineColor:[0,0,0], lineWidth:0.2 },
-      headStyles:{ font:'Montserrat', fillColor:[220,220,220], textColor:[0,0,0], lineColor:[0,0,0], lineWidth:0.3, fontSize:8 },
-      alternateRowStyles:{ fillColor:[245,245,245] },
-      margin:{ left:14, right:14 }
-    });
-  }
 
 
   let y = doc.lastAutoTable.finalY + 8;
@@ -1082,14 +673,43 @@ function arcHeightAtX(span, edgeH, centerH, x){
 }
 
 // ====== РЯД (float -> сглаживание -> -10 -> центр -> округление) ======
-function buildPickersExcelSmooth(span, edgeH, centerH, plankW, gap, offset){
-  const list = [];
+function buildCenteredPlankPositions(span, plankW, gap){
   const P = plankW + gap;
-  if (!isFinite(P) || P <= 0) return list;
+  if (!isFinite(P) || P <= 0) return [];
 
-  // Excel: N = floor((span + gap) / (plankW + gap))
-  const Nraw = (span + gap) / (plankW + gap);
-  const N = Math.floor(Nraw);
+  const N = Math.floor((span + gap) / P);
+  if (N <= 0) return [];
+
+  const center = span / 2;
+  const mid = (N - 1) / 2;
+  const positions = [];
+
+  for (let i = 0; i < N; i++){
+    positions.push(center + (i - mid) * P);
+  }
+
+  return positions;
+}
+
+function buildChessPositionsFromRow1(row1Positions, span, plankW){
+  if (!Array.isArray(row1Positions) || row1Positions.length === 0) return [];
+
+  const halfW = plankW / 2;
+  const positions = [];
+
+  for (let i = 0; i < row1Positions.length - 1; i++){
+    const pos = (row1Positions[i] + row1Positions[i + 1]) / 2;
+    if ((pos - halfW) >= -1e-9 && (pos + halfW) <= span + 1e-9){
+      positions.push(pos);
+    }
+  }
+
+  return positions;
+}
+
+function buildPickersExcelSmoothFromPositions(span, edgeH, centerH, positions){
+  const list = [];
+  const N = positions.length;
   if (N <= 0) return list;
 
   const a = span / 2;
@@ -1097,8 +717,7 @@ function buildPickersExcelSmooth(span, edgeH, centerH, plankW, gap, offset){
   // 1) сырые высоты
   const raw = [];
   for (let i = 0; i < N; i++){
-    const pos = (plankW / 2) + i * P + offset;
-    const x = pos - a;
+    const x = positions[i] - a;
     let h = arcHeightAtX(span, edgeH, centerH, x);
     if (i === 0 || i === N - 1) h = edgeH;
     raw.push(h);
@@ -1241,11 +860,11 @@ function aCalc(){
   const P = plankW + gap;
   if (P <= 0) { if(aErrEl) aErrEl.textContent = 'Ширина планки + зазор должны быть > 0'; return; }
 
-  const row1 = buildPickersExcelSmooth(span, edgeH, centerH, plankW, gap, 0);
-  let row2 = chess ? buildPickersExcelSmooth(span, edgeH, centerH, plankW, gap, P / 2) : [];
+  const row1Positions = buildCenteredPlankPositions(span, plankW, gap);
+  const row1 = buildPickersExcelSmoothFromPositions(span, edgeH, centerH, row1Positions);
 
-  // для шахматки: если получилось столько же, а N нечётное — последнюю во 2 ряду убираем
-  if (chess && (row1.length % 2 === 1) && row2.length === row1.length) row2.pop();
+  const row2Positions = chess ? buildChessPositionsFromRow1(row1Positions, span, plankW) : [];
+  const row2 = chess ? buildPickersExcelSmoothFromPositions(span, edgeH, centerH, row2Positions) : [];
 
   const all = row1.concat(row2);
   const qty = chess ? (row1.length + row2.length) : row1.length;
@@ -3161,346 +2780,6 @@ function downloadSoffitPdf(){
     doc.save('raschet-fasada.pdf');
   }
   if (faPdfBtn) faPdfBtn.onclick = downloadFacadePdf;
-
-
-
-  // ============================================================
-  // Гидро‑пароизоляция
-  // ============================================================
-  const hArea = document.getElementById('h_area');
-  const hPurpose = document.getElementById('h_purpose');
-  const hCalcBtn = document.getElementById('h_calc');
-  const hPdfBtn = document.getElementById('h_pdf');
-  const hRes = document.getElementById('h_result');
-  const hErr = document.getElementById('h_err');
-
-  const HYDRO_PURPOSES = {
-    facade: [
-      { id:'spanizol_a', name:'Ветроизоляция SPANIZOL A', rollArea:70, hasTape:false },
-      { id:'isospan_a', name:'Изоспан A', rollArea:70, hasTape:false },
-      { id:'gl_facade', name:'Пленка ветро-влагозащитная Grand Line Facade (75м2)', rollArea:75, hasTape:false },
-      { id:'ondutis_a100', name:'Ондутис A100', rollArea:75, hasTape:false },
-      { id:'gl_105', name:'Мембрана супердиффузионная Grand Line 105 (75м2)', rollArea:75, hasTape:false },
-    ],
-    warm_roof: [
-      { id:'spanizol_b', name:'Пароизоляция SPANIZOL B', rollArea:70, hasTape:false },
-      { id:'hidro_b', name:'Гидроизоляция B', rollArea:70, hasTape:false },
-      { id:'isospan_am', name:'Изоспан AM', rollArea:70, hasTape:false },
-      { id:'isospan_b_fix', name:'Изоспан B fix', rollArea:70, hasTape:true },
-      { id:'ondutis_r70', name:'Ондутис R70 (Ондутис Smart R70)', rollArea:75, hasTape:true },
-      { id:'gl_b_ultra', name:'Пленка пароизоляционная Grand Line B Ultra (75м2)', rollArea:75, hasTape:false },
-      { id:'gl_105', name:'Мембрана супердиффузионная Grand Line 105 (75м2)', rollArea:75, hasTape:false },
-      { id:'gl_d98', name:'Материал гидроизоляционный Grand Line D 98 (75м2)', rollArea:75, hasTape:false },
-      { id:'gl_d98_tape', name:'Материал гидроизоляционный Grand Line D 98+TAPE (75м2)', rollArea:75, hasTape:true },
-      { id:'gl_silver_tape', name:'Материал гидроизоляционный Grand Line Silver D+TAPE (75м2)', rollArea:75, hasTape:true },
-    ],
-    cold_roof: [
-      { id:'spanizol_d', name:'Гидроизоляция универсальная SPANIZOL D', rollArea:70, hasTape:false },
-      { id:'hidro_d', name:'Гидроизоляция D', rollArea:70, hasTape:false },
-      { id:'isospan_d', name:'Изоспан D', rollArea:70, hasTape:false },
-      { id:'isospan_d_fix', name:'Изоспан D fix', rollArea:70, hasTape:true },
-      { id:'ondutis_rv', name:'Ондутис RV (Ондутис Smart RV70)', rollArea:75, hasTape:true },
-      { id:'gl_d98', name:'Материал гидроизоляционный Grand Line D 98 (75м2)', rollArea:75, hasTape:false },
-      { id:'gl_d98_tape', name:'Материал гидроизоляционный Grand Line D 98+TAPE (75м2)', rollArea:75, hasTape:true },
-      { id:'gl_silver_tape', name:'Материал гидроизоляционный Grand Line Silver D+TAPE (75м2)', rollArea:75, hasTape:true },
-    ],
-    walls: [
-      { id:'spanizol_b', name:'Пароизоляция SPANIZOL B', rollArea:70, hasTape:false },
-      { id:'hidro_b', name:'Гидроизоляция B', rollArea:70, hasTape:false },
-      { id:'isospan_b_fix', name:'Изоспан B fix', rollArea:70, hasTape:true },
-      { id:'ondutis_r70', name:'Ондутис R70 (Ондутис Smart R70)', rollArea:75, hasTape:true },
-      { id:'gl_b_ultra', name:'Пленка пароизоляционная Grand Line B Ultra (75м2)', rollArea:75, hasTape:false },
-    ],
-    floors: [
-      { id:'spanizol_d', name:'Гидроизоляция универсальная SPANIZOL D', rollArea:70, hasTape:false },
-      { id:'hidro_d', name:'Гидроизоляция D', rollArea:70, hasTape:false },
-      { id:'isospan_d', name:'Изоспан D', rollArea:70, hasTape:false },
-      { id:'isospan_d_fix', name:'Изоспан D fix', rollArea:70, hasTape:true },
-    ],
-  };
-
-  const TAPE_ITEMS = [
-    { id:'isospan_kl', name:'Изоспан KL двусторонняя клейкая лента 15мм/50 п.м', rollLen:50 },
-    { id:'isospan_kl_plus', name:'Изоспан KL+ двусторонняя клейкая лента 25мм/25 п.м', rollLen:25 },
-    { id:'isospan_ml_proff', name:'Изоспан ML proff односторонняя лента усиленная 50мм/25 п.м', rollLen:25 },
-  ];
-
-  function hReset(){
-    if (hRes) hRes.innerHTML = '';
-    if (hErr) hErr.textContent = '';
-    if (hPdfBtn) hPdfBtn.classList.add('hidden');
-  }
-
-  function hCompute(){
-    hReset();
-    const area = Number(String(hArea.value||'').replace(',', '.'));
-    if (!isFinite(area) || area <= 0){ hErr.textContent = 'Введите площадь > 0'; return null; }
-
-    const p = hPurpose.value;
-    const list = HYDRO_PURPOSES[p] || [];
-    if (!list.length){ hErr.textContent = 'Выберите назначение'; return null; }
-
-    const OVERLAP_K = 1.15; // запас на нахлёсты/подрезку
-
-    const items = list.map(mat => {
-      const rolls = Math.ceil((area * OVERLAP_K) / mat.rollArea);
-
-      // Tape: if no integrated tape, add recommended tapes.
-      const tapeMeters = mat.hasTape ? 0 : Math.ceil((area / 1.6) * 1.1);
-      const tapeRows = [];
-      if (!mat.hasTape){
-        for (const t of TAPE_ITEMS){
-          tapeRows.push({ name:t.name, qty: Math.ceil(tapeMeters / t.rollLen), size: t.rollLen + ' п.м' });
-        }
-      }
-
-      return { mat, rolls, tapeMeters, tapeRows };
-    });
-
-    return { area, purposeKey: p, purposeName: (hPurpose.options[hPurpose.selectedIndex]?.textContent || ''), items };
-  }
-
-  function hRender(r){
-    const rows = [];
-    rows.push(['Назначение', r.purposeName, '', '']);
-    rows.push(['Площадь', fmt(r.area), 'м²', '']);
-    rows.push(['Запас', '15%', '', '']);
-
-    r.items.forEach(it => {
-      rows.push(['Материал', it.mat.name, '', '']);
-      rows.push(['Рулоны', String(it.rolls), it.mat.rollArea + ' м²/рулон', 'С запасом 15%']);
-      if (!it.mat.hasTape){
-        rows.push(['Ленты (рекоменд.)', it.tapeMeters + ' п.м', 'расчётно', '']);
-        it.tapeRows.forEach(tr => rows.push([tr.name, String(tr.qty), tr.size, '']));
-      }
-    });
-
-    const table = `
-      <table class="mp-table">
-        <thead><tr><th>Позиция</th><th>Кол-во</th><th>Размер</th><th>Примечание</th></tr></thead>
-        <tbody>${rows.map(rr=>`<tr><td>${rr[0]}</td><td>${rr[1]}</td><td>${rr[2]}</td><td>${rr[3]}</td></tr>`).join('')}</tbody>
-      </table>
-    `;
-    hRes.innerHTML = table;
-    hPdfBtn.classList.remove('hidden');
-  }
-
-  function downloadHydroPdf(r){
-    if (!window.jspdf?.jsPDF) return;
-    const doc = new window.jspdf.jsPDF({ unit:'mm', format:'a4' });
-
-    const hasMontserrat = (typeof loadMontserrat === 'function') ? loadMontserrat(doc) : false;
-    doc.setFont(hasMontserrat ? 'Montserrat' : 'helvetica', 'normal');
-
-    doc.setFontSize(14);
-    doc.text('Калькулятор гидро‑пароизоляции', 14, 14);
-
-    const head = [['Позиция','Кол-во','Размер','Примечание']];
-    const body = [];
-
-    body.push(['Назначение', r.purposeName, '', '']);
-    body.push(['Площадь', fmt(r.area), 'м²', '']);
-    body.push(['Запас', '15%', '', '']);
-
-    r.items.forEach(it => {
-      body.push(['Материал', it.mat.name, '', '']);
-      body.push(['Рулоны', String(it.rolls), it.mat.rollArea + ' м²/рулон', 'С запасом 15%']);
-      if (!it.mat.hasTape){
-        body.push(['Ленты (рекоменд.)', it.tapeMeters + ' п.м', 'расчётно', '']);
-        it.tapeRows.forEach(tr => body.push([tr.name, String(tr.qty), tr.size, '']));
-      }
-    });
-
-    if (doc.autoTable){
-      doc.autoTable({
-        head,
-        body,
-        startY: 20,
-        theme:'grid',
-        styles:{ font: (hasMontserrat ? 'Montserrat' : 'helvetica'), fontSize:8, cellPadding:2, lineColor:[0,0,0], lineWidth:0.2 },
-        headStyles:{ fillColor:[240,240,240], textColor:[0,0,0], lineColor:[0,0,0], lineWidth:0.2 }
-      });
-    }
-
-    doc.save('gidro-paroizolyaciya.pdf');
-  }
-
-  // ============================================================
-  // INSULATION_CALC (утеплители)
-  // ============================================================
-  const iArea = document.getElementById('i_area');
-  const iPurpose = document.getElementById('i_purpose');
-  const iCalcBtn = document.getElementById('i_calc');
-  const iPdfBtn = document.getElementById('i_pdf');
-  const iRes = document.getElementById('i_result');
-  const iErr = document.getElementById('i_err');
-
-  const INS_PURPOSES = [
-    { key:'facade', name:'Фасады / наружные стены', materials:[
-      { name:'Технониколь Техноблок Стандарт', packArea:5.76, kind:'pack' },
-      { name:'Пеноплекс', packArea:5.76, kind:'pack' },
-      { name:'Базальтовая плита СТАНДАРТ', packArea:5.76, kind:'pack' },
-    ]},
-    { key:'roof_warm', name:'Утеплённая скатная кровля', materials:[
-      { name:'ISOVER Каркас-П37', packArea:15.0, kind:'pack' },
-      { name:'URSA Terra 35 QN Скатная', packArea:16.0, kind:'roll' },
-      { name:'Технониколь Роклайт', packArea:5.76, kind:'pack' },
-      { name:'ROCKWOOL Скандик', packArea:5.76, kind:'pack' },
-      { name:'Изорок Ультралайт ПП-33', packArea:5.76, kind:'pack' },
-      { name:'НЕМАН М-11 лайт', packArea:15.0, kind:'roll' },
-      { name:'НЕМАН М-11', packArea:15.0, kind:'roll' },
-      { name:'Изорок ПП-80', packArea:2.88, kind:'pack' },
-    ]},
-    { key:'attic_cold', name:'Холодный чердак / перекрытия', materials:[
-      { name:'Технониколь Роклайт', packArea:5.76, kind:'pack' },
-      { name:'ROCKWOOL Скандик', packArea:5.76, kind:'pack' },
-      { name:'ISOVER Каркас-П37', packArea:15.0, kind:'pack' },
-      { name:'НЕМАН М-11 лайт', packArea:15.0, kind:'roll' },
-      { name:'НЕМАН М-11', packArea:15.0, kind:'roll' },
-      { name:'URSA П-15', packArea:16.0, kind:'pack' },
-      { name:'НЕМАН П-15', packArea:16.0, kind:'pack' },
-      { name:'Базальтовая плита', packArea:5.76, kind:'pack' },
-    ]},
-    { key:'frame', name:'Каркасные стены / перегородки', materials:[
-      { name:'ISOVER Каркас-П37', packArea:15.0, kind:'pack' },
-      { name:'Технониколь Роклайт', packArea:5.76, kind:'pack' },
-      { name:'ROCKWOOL Скандик', packArea:5.76, kind:'pack' },
-      { name:'URSA П-15', packArea:16.0, kind:'pack' },
-      { name:'НЕМАН П-15', packArea:16.0, kind:'pack' },
-      { name:'Изорок Изолайт', packArea:5.76, kind:'pack' },
-      { name:'Изорок Ультралайт ПП-33', packArea:5.76, kind:'pack' },
-      { name:'Изорок ПП-80', packArea:2.88, kind:'pack' },
-      { name:'Базальтовая плита', packArea:5.76, kind:'pack' },
-    ]},
-    { key:'acoustic', name:'Звукоизоляция', materials:[
-      { name:'ROCKWOOL Акустик', packArea:5.76, kind:'pack' },
-      { name:'ISOVER Каркас-П37', packArea:15.0, kind:'pack' },
-      { name:'Базальтовая плита', packArea:5.76, kind:'pack' },
-    ]},
-    { key:'vent_facade', name:'Вентилируемый фасад', materials:[
-      { name:'Технониколь Техновент Экстра', packArea:2.88, kind:'pack' },
-      { name:'Базальтовая плита ОПТИМАЛ', packArea:5.76, kind:'pack' },
-    ]},
-    { key:'dense', name:'Плотные базальтовые плиты', materials:[
-      { name:'Изорок ПП-80', packArea:2.88, kind:'pack' },
-    ]},
-    { key:'foundation', name:'Фундамент / цоколь / пол', materials:[
-      { name:'Пеноплекс 30', packArea:5.76, kind:'pack' },
-      { name:'Пеноплекс 50', packArea:5.76, kind:'pack' },
-      { name:'Изорок ПП-80', packArea:2.88, kind:'pack' },
-    ]},
-  ];
-
-  function iFillPurposes(){
-    if (!iPurpose) return;
-    iPurpose.innerHTML = INS_PURPOSES.map(p=>`<option value="${p.key}">${p.name}</option>`).join('');
-  }
-
-  function iGetPurpose(){
-    return INS_PURPOSES.find(x=>x.key===iPurpose.value) || INS_PURPOSES[0];
-  }
-
-  function iComputeAll(){
-    if (!iArea || !iPurpose) return null;
-    const area = n(iArea.value);
-    if (!isFinite(area) || area<=0){ iErr.textContent='Введите площадь'; return null; }
-    const purpose = iGetPurpose();
-
-    const K = 1.10; // запас на подрезку/стыки
-    const items = purpose.materials.map(mat => {
-      const qty = Math.ceil((area * K) / mat.packArea);
-      const unitWord = (mat.kind === 'roll') ? 'рулонов' : 'упаковок';
-      return { name: mat.name, packArea: mat.packArea, kind: mat.kind, qty, unitWord };
-    });
-    return { area, purpose, K, items };
-  }
-
-  function iRender(r){
-    const headRows = [
-      ['Площадь', fmt(r.area), 'м²', ''],
-      ['Назначение', r.purpose.name, '', ''],
-      ['Запас', (Math.round((r.K-1)*100)) + '%', '', ''],
-    ];
-
-    iRes.innerHTML = `
-      <table class="mp-table">
-        <thead><tr><th>Позиция</th><th>Значение</th><th>Ед.</th></tr></thead>
-        <tbody>
-          ${headRows.map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td><td>${x[2]}</td></tr>`).join('')}
-        </tbody>
-      </table>
-
-      <div style="height:10px;"></div>
-
-      <table class="mp-table">
-        <thead><tr><th>Материал</th><th>Кол-во</th><th>Ед.</th></tr></thead>
-        <tbody>
-          ${r.items.map(it=>`<tr><td>${it.name}</td><td>${it.qty}</td><td>${it.unitWord}</td></tr>`).join('')}
-        </tbody>
-      </table>
-    `;
-    iPdfBtn.classList.remove('hidden');
-  }
-
-  function downloadInsulationPdf(r){
-    const doc = pdfDoc();
-    if (!doc) { iErr.textContent='PDF не может быть создан'; return; }
-    pdfSetFont(doc);
-    doc.setFontSize(14);
-    doc.text('Калькулятор утеплителей', 14, 14);
-
-    doc.setFontSize(10);
-    doc.autoTable({
-      startY: 22,
-      head: [['Параметр','Значение']],
-      body: [
-        ['Площадь', `${fmt(r.area)} м²`],
-        ['Назначение', r.purpose.name],
-        ['Запас', `${Math.round((r.K-1)*100)}%`],
-      ],
-      theme:'grid',
-      styles:{ font:'Montserrat', fontSize:9, cellPadding:2, lineColor:[0,0,0], lineWidth:0.2 },
-      headStyles:{ fillColor:[240,240,240], textColor:[0,0,0], lineColor:[0,0,0], lineWidth:0.2 },
-      margin:{ left:14, right:14 }
-    });
-
-    doc.autoTable({
-      startY: doc.lastAutoTable.finalY + 6,
-      head: [['Материал','Кол-во','Ед.','Примечание']],
-      body: r.items.map(it => ([it.name, String(it.qty), it.unitWord, `по ${it.packArea} м²/ед.`])),
-      theme:'grid',
-      styles:{ font:'Montserrat', fontSize:8, cellPadding:2, lineColor:[0,0,0], lineWidth:0.2 },
-      headStyles:{ fillColor:[240,240,240], textColor:[0,0,0], lineColor:[0,0,0], lineWidth:0.2 },
-      margin:{ left:14, right:14 }
-    });
-
-    doc.save('utepliteli.pdf');
-  }
-
-  if (iPurpose){
-    iFillPurposes();
-    iRes.innerHTML='';
-    iErr.textContent='';
-    iPdfBtn.classList.add('hidden');
-    iPurpose.addEventListener('change', () => {
-      iRes.innerHTML='';
-      iErr.textContent='';
-      iPdfBtn.classList.add('hidden');
-    });
-  }
-
-  if (iCalcBtn) iCalcBtn.addEventListener('click', () => {
-    iErr.textContent='';
-    const r = iComputeAll();
-    if (r) iRender(r);
-  });
-
-  if (iPdfBtn) iPdfBtn.addEventListener('click', () => {
-    iErr.textContent='';
-    const r = iComputeAll();
-    if (r) downloadInsulationPdf(r);
-  });
-
 
 });
 sCalcBtn?.addEventListener('click', sCalc);
