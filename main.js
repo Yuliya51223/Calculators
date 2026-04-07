@@ -1592,6 +1592,51 @@ function gRound2(x){
   return Math.round(n * 100) / 100;
 }
 
+
+function pickNikaPipeSet(height, funnels){
+  const H = Number(height);
+  const F = Number(funnels);
+  if (!isFinite(H) || H <= 0 || !isFinite(F) || F <= 0){
+    return { pipe2: 0, pipe3: 0, pipeKnee1: 0, pipeKnee3: 0, coveredHeight: 0 };
+  }
+
+  let best = null;
+  const max3 = Math.ceil(H / 3) + 2;
+  const max2 = Math.ceil(H / 2) + 2;
+
+  [1, 3].forEach(kneeLen => {
+    for (let n3 = 0; n3 <= max3; n3++){
+      for (let n2 = 0; n2 <= max2; n2++){
+        const total = kneeLen + (n3 * 3) + (n2 * 2);
+        if (total < H) continue;
+
+        const extra = +(total - H).toFixed(6);
+        const pieces = 1 + n3 + n2;
+        const cand = { kneeLen, n3, n2, total, extra, pieces };
+
+        if (!best ||
+            cand.extra < best.extra ||
+            (cand.extra === best.extra && cand.pieces < best.pieces) ||
+            (cand.extra === best.extra && cand.pieces === best.pieces && cand.n3 > best.n3)) {
+          best = cand;
+        }
+      }
+    }
+  });
+
+  if (!best){
+    best = { kneeLen: 1, n3: 0, n2: 0, total: 1, extra: Math.max(0, 1 - H), pieces: 1 };
+  }
+
+  return {
+    pipe2: best.n2 * F,
+    pipe3: best.n3 * F,
+    pipeKnee1: (best.kneeLen === 1 ? 1 : 0) * F,
+    pipeKnee3: (best.kneeLen === 3 ? 1 : 0) * F,
+    coveredHeight: best.total
+  };
+}
+
 function gRenderType(){
   if (!gType || !gMetalWrap || !gPlasticWrap) return;
   const isMetal = gType.value === 'metal';
@@ -1727,49 +1772,22 @@ function gCalc(){
 
       push('Воронка выпускная', funnels);
       push('Колено трубы', funnels * 2);
-      push('Колено трубы боковое', funnels * 2);
+      push('Труба водосточная 1м (соединение между колен)', funnels);
 
-      // трубы по Excel-логике (как в ТЗ) — реализуем через интервалы
-      const B20 = funnels;
+      // Подбор труб NIKA по высоте до карниза:
+      // на каждую воронку обязательно ставим 1 трубу с коленом (1 м или 3 м),
+      // остальную длину добираем трубами 2 м и 3 м.
+      // Логика подбора: суммарная длина должна перекрывать H с минимальным запасом,
+      // затем выбираем вариант с меньшим количеством элементов.
+      const pipeSet = pickNikaPipeSet(H, funnels);
 
-      // Труба 3м
-      let pipe3 = null;
-      if (H > 3 && H <= 4) pipe3 = 1 * B20;
-      else if (H > 4 && H <= 6) pipe3 = 1 * B20;
-      else if (H > 6 && H <= 7) pipe3 = 2 * B20;
-      else if (H > 7 && H <= 8) pipe3 = 1 * B20;
-      else if (H > 8 && H <= 9) pipe3 = 2 * B20;
-      else if (H > 9 && H <= 10) pipe3 = 3 * B20;
+      if (pipeSet.pipe3 > 0) push('Труба водосточная 3 м', pipeSet.pipe3);
+      if (pipeSet.pipe2 > 0) push('Труба водосточная 2 м', pipeSet.pipe2);
+      if (pipeSet.pipeKnee3 > 0) push('Труба водосточная с коленом 3 м', pipeSet.pipeKnee3);
+      if (pipeSet.pipeKnee1 > 0) push('Труба водосточная с коленом 1 м', pipeSet.pipeKnee1);
 
-      // Труба 2м
-      let pipe2 = null;
-      if (H > 3 && H <= 5) pipe2 = 1 * B20;
-      else if (H > 7 && H <= 8) pipe2 = 1 * B20;
-
-      // Труба 1м (соединение)
-      const pipe1 = B20;
-
-      // труба с коленом 3м
-      let pipeKnee3 = null;
-      if (H > 4 && H <= 5) pipeKnee3 = 1 * B20;
-      else if (H > 5 && H <= 6) pipeKnee3 = 1 * B20;
-      else if (H > 7 && H <= 8) pipeKnee3 = 1 * B20;
-      else if (H > 8 && H <= 9) pipeKnee3 = 1 * B20;
-
-      // труба с коленом 1м
-      let pipeKnee1 = null;
-      if (H > 3 && H <= 4) pipeKnee1 = 1 * B20;
-      else if (H > 6 && H <= 7) pipeKnee1 = 1 * B20;
-      else if (H > 9 && H <= 10) pipeKnee1 = 1 * B20;
-
-      if (pipe3) push('Труба водосточная 3 м', pipe3);
-      if (pipe2) push('Труба водосточная 2 м', pipe2);
-      push('Труба водосточная 1 м (соединение м/д колен)', pipe1);
-      if (pipeKnee3) push('Труба водосточная с коленом 3м', pipeKnee3);
-      if (pipeKnee1) push('Труба водосточная с коленом 1м', pipeKnee1);
-
-      // держатели трубы: 3 шт на каждые 3 метра (округляем вверх по общей высоте)
-      const holdersPipe = gCeil(H / 3) * 3 * B20;
+      // держатели трубы: 3 шт на каждые 3 метра на каждую воронку
+      const holdersPipe = gCeil(H / 3) * 3 * funnels;
       push('Держатель трубы', holdersPipe);
     } else {
       // Grand Line Optima
