@@ -45,6 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================================
   const sectionsWrap = document.getElementById('sectionsWrap');
   const addSectionBtn = document.getElementById('addSectionBtn');
+  const addWicketBtn = document.getElementById('addWicketBtn');
+  const addGateBtn = document.getElementById('addGateBtn');
   const jCalcBtn = document.getElementById('j_calcBtn');
   const jErr = document.getElementById('j_err');
   const jTableWrap = document.getElementById('j_tableWrap');
@@ -55,8 +57,7 @@ let lastSectionsData = null;
 let lastFinalAgg = null;
 
   // Если второй калькулятор отсутствует на странице — просто выходим
-  if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap) return;
-if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPdfBtn) return;
+  if (!sectionsWrap || !addSectionBtn || !addWicketBtn || !addGateBtn || !jCalcBtn || !jErr || !jTableWrap || !jPdfBtn) return;
 
   let sectionIndex = 0;
 
@@ -90,32 +91,53 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
     return html;
   }
 
+  function itemTypeLabel(type){
+    if (type === 'wicket') return 'Калитка';
+    if (type === 'gate') return 'Ворота';
+    return 'Секция';
+  }
+
   function updateSectionTitles(){
     const sections = sectionsWrap.querySelectorAll('.section');
-    sections.forEach((sec, idx) => {
+    const counters = { section: 0, wicket: 0, gate: 0 };
+
+    sections.forEach(sec => {
+      const type = sec.dataset.itemType || 'section';
+      counters[type] = (counters[type] || 0) + 1;
       const title = sec.querySelector('.section-title');
-      if (title) title.textContent = `Секция ${idx + 1} — исходные параметры`;
+      if (title) title.textContent = `${itemTypeLabel(type)} ${counters[type]} — исходные параметры`;
 
       const removeBtn = sec.querySelector('.remove-section');
-      if (removeBtn) removeBtn.style.display = idx === 0 ? 'none' : 'inline-block';
+      if (removeBtn) removeBtn.style.display = 'inline-block';
     });
+
     sectionIndex = sections.length;
   }
 
-  function createSection(){
+  function createSection(itemType = 'section'){
     sectionIndex++;
 
     const div = document.createElement('div');
     div.className = 'section';
+    div.dataset.itemType = itemType;
 
     div.innerHTML = `
       <div class="section-header">
-        <h3 class="section-title">Секция ${sectionIndex} — исходные параметры</h3>
-        <button type="button" class="remove-section">Удалить секцию</button>
+        <h3 class="section-title">${itemTypeLabel(itemType)} ${sectionIndex} — исходные параметры</h3>
+        <button type="button" class="remove-section">Удалить</button>
       </div>
 
       <div class="grid3">
         <div class="col">
+          ${itemType === 'gate' ? `
+          <div class="field j_gate_type_field">
+            <label>Тип ворот</label>
+            <select class="j_gate_type">
+              <option value="sliding">Откатные</option>
+              <option value="swing">Распашные</option>
+            </select>
+          </div>` : ''}
+
           <div class="field">
             <label>Наименование забора</label>
             <select class="j_name">
@@ -126,27 +148,37 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
           </div>
 
           <div class="field">
-            <label>Высота забора (м)</label>
+            <label>Высота ${itemType === 'section' ? 'забора' : 'изделия'} (м)</label>
             <select class="j_height" disabled>
               ${optionsHTML(jHeights, '— выберите высоту —')}
             </select>
           </div>
 
           <div class="field">
-            <label>Количество секций</label>
-            <input class="j_sections" type="number" min="1" step="1">
+            <label>Количество ${itemType === 'section' ? 'секций' : 'изделий'}</label>
+            <input class="j_sections" type="number" min="1" step="1" value="1">
           </div>
         </div>
 
         <div class="col">
-          <div class="field">
-            <label>Расстояние между столбов (м) <span class="hint">(от 0,5 до 3 м)</span></label>
-            <input class="j_span" type="number" min="0.5" max="3" step="0.01">
+          <div class="field j_span_single_wrap">
+            <label>${itemType === 'section' ? 'Расстояние между столбов (м)' : 'Ширина (м)'} <span class="hint">${itemType === 'gate' ? '(от 0,5 м)' : '(от 0,5 до 3 м)'}</span></label>
+            <input class="j_span" type="number" min="0.5" ${itemType === 'section' || itemType === 'wicket' ? 'max="3"' : ''} step="0.01">
           </div>
+
+          ${itemType === 'gate' ? `
+          <div class="field j_span_leaf1_wrap hidden">
+            <label>Ширина первой створки (м)</label>
+            <input class="j_span_leaf1" type="number" min="0.5" step="0.01">
+          </div>
+          <div class="field j_span_leaf2_wrap hidden">
+            <label>Ширина второй створки (м)</label>
+            <input class="j_span_leaf2" type="number" min="0.5" step="0.01">
+          </div>` : ''}
 
           <div class="field">
             <label>Количество углов 90°</label>
-            <input class="j_corners" type="number" min="0" step="1">
+            <input class="j_corners" type="number" min="0" step="1" value="0">
           </div>
 
           <div class="field">
@@ -170,28 +202,84 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
             </select>
           </div>
 
+          ${itemType === 'section' ? `
           <div class="field">
             <label>Заглубление столба (м)</label>
             <select class="j_depth">
               ${optionsHTML(jDepths, '— выберите —')}
             </select>
-          </div>
+          </div>` : ''}
         </div>
       </div>
     `;
 
     sectionsWrap.appendChild(div);
 
-    // высота доступна только после выбора наименования
     const nameSel = div.querySelector('.j_name');
     const heightSel = div.querySelector('.j_height');
+    const brickSel = div.querySelector('.j_brick');
+    const gateTypeSel = div.querySelector('.j_gate_type');
+
+    function updateSectionState(){
+      const hasName = !!nameSel.value;
+      heightSel.disabled = !hasName;
+      if (!hasName) heightSel.value = '';
+
+      const pipeSel = div.querySelector('.j_pipe');
+      const depthSel = div.querySelector('.j_depth');
+      const isBrick = brickSel?.value === 'yes';
+      if (pipeSel){
+        pipeSel.disabled = isBrick;
+        if (isBrick) pipeSel.value = '';
+      }
+      if (depthSel){
+        depthSel.disabled = isBrick;
+        if (isBrick) depthSel.value = '';
+      }
+
+      if (div.dataset.itemType === 'gate'){
+        const isSwing = gateTypeSel?.value === 'swing';
+        const singleWrap = div.querySelector('.j_span_single_wrap');
+        const leaf1Wrap = div.querySelector('.j_span_leaf1_wrap');
+        const leaf2Wrap = div.querySelector('.j_span_leaf2_wrap');
+        const spanInput = div.querySelector('.j_span');
+        const leaf1Input = div.querySelector('.j_span_leaf1');
+        const leaf2Input = div.querySelector('.j_span_leaf2');
+
+        if (singleWrap) singleWrap.classList.toggle('hidden', isSwing);
+        if (leaf1Wrap) leaf1Wrap.classList.toggle('hidden', !isSwing);
+        if (leaf2Wrap) leaf2Wrap.classList.toggle('hidden', !isSwing);
+
+        if (spanInput) {
+          spanInput.disabled = isSwing;
+          if (isSwing) spanInput.value = '';
+        }
+        if (leaf1Input) {
+          leaf1Input.disabled = !isSwing;
+          if (!isSwing) leaf1Input.value = '';
+        }
+        if (leaf2Input) {
+          leaf2Input.disabled = !isSwing;
+          if (!isSwing) leaf2Input.value = '';
+        }
+      }
+    }
+
     nameSel.addEventListener('change', () => {
-      heightSel.disabled = !nameSel.value;
-      if (!nameSel.value) heightSel.value = '';
+      updateSectionState();
+      jResetOutput();
+    });
+    brickSel?.addEventListener('change', () => {
+      updateSectionState();
+      jResetOutput();
+    });
+    gateTypeSel?.addEventListener('change', () => {
+      updateSectionState();
       jResetOutput();
     });
 
-    // удаление секции
+    updateSectionState();
+
     const removeBtn = div.querySelector('.remove-section');
     removeBtn.addEventListener('click', () => {
       div.remove();
@@ -199,7 +287,6 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
       jResetOutput();
     });
 
-    // очистка результата при изменениях
     div.querySelectorAll('input, select').forEach(el => {
       el.addEventListener('input', jResetOutput);
       el.addEventListener('change', jResetOutput);
@@ -218,10 +305,11 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
 
 
   // первая секция при загрузке
-  createSection();
+  createSection('section');
 
-  // кнопка "Добавить секцию"
-  addSectionBtn.addEventListener('click', () => createSection());
+  addSectionBtn.addEventListener('click', () => createSection('section'));
+  addWicketBtn.addEventListener('click', () => createSection('wicket'));
+  addGateBtn.addEventListener('click', () => createSection('gate'));
 
   // ===== РЕНДЕР ТАБЛИЦЫ =====
   function esc(s){
@@ -238,21 +326,26 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
     return String(Math.round(n));
   }
 
+  function visibleBomItems(finalAgg){
+    return BOM_ITEMS.filter(it => it.key !== 'dekor_ugol' || ((finalAgg[it.key]?.length || 0) > 0));
+  }
+
   function renderBOMTable(agg){
-    const cols1 = BOM_ITEMS.map(it => {
+    const items = visibleBomItems(agg);
+    const cols1 = items.map(it => {
       const title = esc(it.label).replaceAll('\n','<br>');
       return `<th colspan="2">${title}</th>`;
     }).join('');
 
-    const cols2 = BOM_ITEMS.map(() =>
+    const cols2 = items.map(() =>
       `<th class="subhead">Размер, м</th><th class="subhead">Кол-во, шт</th>`
     ).join('');
 
-    const maxRows = Math.max(1, ...BOM_ITEMS.map(it => (agg[it.key]?.length || 0)));
+    const maxRows = Math.max(1, ...items.map(it => (agg[it.key]?.length || 0)));
 
     let body = '';
     for (let r = 0; r < maxRows; r++){
-      const tds = BOM_ITEMS.map(it => {
+      const tds = items.map(it => {
         const rec = agg[it.key]?.[r];
         const size = rec ? rec.size : '—';
         const qty  = rec ? rec.qty  : '—';
@@ -278,19 +371,35 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
   function getAllSectionsData(){
     const sections = Array.from(sectionsWrap.querySelectorAll('.section'));
     return sections.map(sec => {
+      const itemType = sec.dataset.itemType || 'section';
+      const gateType = sec.querySelector('.j_gate_type')?.value || 'sliding';
       const name = sec.querySelector('.j_name')?.value || '';
       const height = Number((sec.querySelector('.j_height')?.value || '').replace(',', '.'));
-      const span = Number(sec.querySelector('.j_span')?.value);
+      const span = Number((sec.querySelector('.j_span')?.value || '').replace(',', '.'));
+      const spanLeaf1 = Number((sec.querySelector('.j_span_leaf1')?.value || '').replace(',', '.'));
+      const spanLeaf2 = Number((sec.querySelector('.j_span_leaf2')?.value || '').replace(',', '.'));
       const sectionsQty = Number(sec.querySelector('.j_sections')?.value);
       const corners = Number(sec.querySelector('.j_corners')?.value);
       const brick = sec.querySelector('.j_brick')?.value || '';
       const pipe = sec.querySelector('.j_pipe')?.value || ''; // none / 60x60 / 80x80
       const depth = Number((sec.querySelector('.j_depth')?.value || '').replace(',', '.'));
-      return { name, height, span, sectionsQty, corners, brick, pipe, depth };
+      const totalSpan = itemType === 'gate' && gateType === 'swing'
+        ? ((isFinite(spanLeaf1) ? spanLeaf1 : 0) + (isFinite(spanLeaf2) ? spanLeaf2 : 0))
+        : span;
+      return { itemType, gateType, name, height, span, spanLeaf1, spanLeaf2, totalSpan, sectionsQty, corners, brick, pipe, depth };
     });
   }
 
-  function roundToCmMeters(x){ return Number(x.toFixed(2)); } // до 0,01 м
+  function roundToCmMeters(x){ return Math.round(Number(x) * 100) / 100; } // до 0,01 м
+  function calcLamelQtyByHeight(height, sectionsQty){
+    return Math.floor(height / 0.095) * sectionsQty;
+  }
+  function calcWicketLamelQty(height, sectionsQty){
+    return Math.ceil((height - (0.06 * 2)) / 0.095) * sectionsQty;
+  }
+  function calcGateLamelQty(height, sectionsQty){
+    return Math.ceil((height - (0.06 * 2)) / 0.095) * sectionsQty;
+  }
 
   function sizeByHeight(h){
     if (h <= 2) return 2;
@@ -369,41 +478,99 @@ function sizeBySpan(span){
     for (let i = 0; i < data.length; i++) {
       const s = data[i];
       const idx = i + 1;
+      const itemLabel = itemTypeLabel(s.itemType || 'section');
 
-      if (!s.name) { jErr.textContent = `Секция ${idx}: выберите наименование`; return; }
-      if (!isFinite(s.height) || s.height <= 0) { jErr.textContent = `Секция ${idx}: выберите высоту`; return; }
-      if (!isFinite(s.span) || s.span < 0.5 || s.span > 3) { jErr.textContent = `Секция ${idx}: расстояние между столбов 0,5–3 м`; return; }
-      if (!Number.isInteger(s.sectionsQty) || s.sectionsQty <= 0) { jErr.textContent = `Секция ${idx}: количество секций — целое > 0`; return; }
-      if (!Number.isInteger(s.corners) || s.corners < 0) { jErr.textContent = `Секция ${idx}: углы — целое ≥ 0`; return; }
-      if (!s.brick) { jErr.textContent = `Секция ${idx}: выберите кирпичные/бетонные столбы`; return; }
-      if (!s.pipe) { jErr.textContent = `Секция ${idx}: выберите размер профтрубы`; return; }
-      if (!isFinite(s.depth) || s.depth < 0.3 || s.depth > 1.5) { jErr.textContent = `Секция ${idx}: заглубление 0,3–1,5 м`; return; }
+      if (!s.name) { jErr.textContent = `${itemLabel} ${idx}: выберите наименование`; return; }
+      if (!isFinite(s.height) || s.height <= 0) { jErr.textContent = `${itemLabel} ${idx}: выберите высоту`; return; }
+
+      if (s.itemType === 'gate' && s.gateType === 'swing') {
+        if (!isFinite(s.spanLeaf1) || s.spanLeaf1 < 0.5) { jErr.textContent = `${itemLabel} ${idx}: ширина первой створки должна быть не менее 0,5 м`; return; }
+        if (!isFinite(s.spanLeaf2) || s.spanLeaf2 < 0.5) { jErr.textContent = `${itemLabel} ${idx}: ширина второй створки должна быть не менее 0,5 м`; return; }
+      } else {
+        const maxSpan = s.itemType === 'section' || s.itemType === 'wicket' ? 3 : Infinity;
+        if (!isFinite(s.span) || s.span < 0.5 || s.span > maxSpan) {
+          jErr.textContent = s.itemType === 'section'
+            ? `${itemLabel} ${idx}: расстояние между столбов 0,5–3 м`
+            : `${itemLabel} ${idx}: ширина должна быть не менее 0,5 м${isFinite(maxSpan) ? ' и не более 3 м' : ''}`;
+          return;
+        }
+      }
+
+      if (!Number.isInteger(s.sectionsQty) || s.sectionsQty <= 0) { jErr.textContent = `${itemLabel} ${idx}: количество — целое > 0`; return; }
+      if (!Number.isInteger(s.corners) || s.corners < 0) { jErr.textContent = `${itemLabel} ${idx}: углы — целое ≥ 0`; return; }
+      if (!s.brick) { jErr.textContent = `${itemLabel} ${idx}: выберите кирпичные/бетонные столбы`; return; }
+      if (s.brick !== 'yes') {
+        if (!s.pipe) { jErr.textContent = `${itemLabel} ${idx}: выберите размер профтрубы`; return; }
+        if (s.itemType === 'section' && (!isFinite(s.depth) || s.depth < 0.3 || s.depth > 1.5)) { jErr.textContent = `${itemLabel} ${idx}: заглубление 0,3–1,5 м`; return; }
+      }
     }
 
     const agg = {};
 
     data.forEach(s => {
-      // Ламели
-      const lamelSize = roundToCmMeters(s.span - 0.01);
-      const lamelQty = Math.floor(s.height / 0.095 * s.sectionsQty);
-      addAgg(agg, 'lamel', lamelSize, lamelQty);
+      const spansForLamel = [];
+      const spansForAccessories = [];
+
+      if (s.itemType === 'wicket') {
+        spansForLamel.push(s.totalSpan - 0.01 - 0.035 - (0.06 * 2) - 0.03);
+        spansForAccessories.push(s.totalSpan);
+      } else if (s.itemType === 'gate' && s.gateType === 'swing') {
+        spansForLamel.push((s.spanLeaf1 - 0.01 - 0.12), (s.spanLeaf2 - 0.01 - 0.12));
+        spansForAccessories.push(s.spanLeaf1, s.spanLeaf2);
+      } else if (s.itemType === 'gate' && s.gateType === 'sliding' && s.totalSpan >= 4) {
+        const slidingSplitLamel = ((s.span - (3 * 0.06)) / 2) - 0.01;
+        // Для откатных ворот шире 4 м каждая горизонталь состоит из двух ламелей одинаковой длины
+        spansForLamel.push(slidingSplitLamel, slidingSplitLamel);
+        spansForAccessories.push(s.span);
+      } else {
+        spansForLamel.push(s.totalSpan - 0.01);
+        spansForAccessories.push(s.totalSpan);
+      }
+
+      let lamelQtySingle = calcLamelQtyByHeight(s.height, s.sectionsQty);
+      if (s.itemType === 'wicket') {
+        lamelQtySingle = calcWicketLamelQty(s.height, s.sectionsQty);
+      } else if (s.itemType === 'gate') {
+        lamelQtySingle = calcGateLamelQty(s.height, s.sectionsQty);
+      }
+      spansForLamel.forEach(rawSpan => {
+        addAgg(agg, 'lamel', roundToCmMeters(rawSpan), lamelQtySingle);
+      });
+      const lamelQty = lamelQtySingle * spansForLamel.length;
 
       // Стойка
       const stoykaSize = sizeByHeightStoykaKrepezh(s.height);
-      const stoykaQty = s.sectionsQty * 2;
+      const stoykaQty = s.itemType === 'gate' && s.gateType === 'swing'
+        ? s.sectionsQty * 4
+        : s.sectionsQty * 2;
       addAgg(agg, 'stoyka', stoykaSize, stoykaQty);
 
       // Крепежная планка
       const krepezhSize = sizeByHeightStoykaKrepezh(s.height);
-      const fenceLen = s.span * s.sectionsQty;
-      const krepezhMultiplier = (fenceLen > 3) ? 2 : 1; // если длина забора (суммарно по секциям) > 3 м, крепежных планок в 2 раза больше
-      const krepezhQty = Math.ceil((s.span / 0.5)) * 2 * krepezhMultiplier * s.sectionsQty; // расстояние между столбов / 0,5 * 2 (если длина >3м) * кол-во секций, округление вверх
+      let krepezhQty = 0;
+      if (s.itemType === 'section') {
+        if (s.totalSpan >= 2) {
+          krepezhQty = Math.floor(s.totalSpan / 1) * s.sectionsQty;
+        }
+      } else if (s.itemType === 'wicket') {
+        if (s.totalSpan >= 2) {
+          krepezhQty = Math.floor(s.totalSpan / 1) * s.sectionsQty;
+        }
+      } else if (s.itemType === 'gate') {
+        if (s.gateType === 'swing') {
+          const leaf1Qty = (s.spanLeaf1 >= 2) ? Math.floor(s.spanLeaf1 / 1) * s.sectionsQty : 0;
+          const leaf2Qty = (s.spanLeaf2 >= 2) ? Math.floor(s.spanLeaf2 / 1) * s.sectionsQty : 0;
+          krepezhQty = leaf1Qty + leaf2Qty;
+        } else if (s.totalSpan >= 2) {
+          krepezhQty = Math.floor(s.totalSpan / 1) * s.sectionsQty;
+        }
+      }
       addAgg(agg, 'krepezh', krepezhSize, krepezhQty);
 
       // Крышка
-      const kryshkaSize = sizeBySpan(s.span);
-      const kryshkaQty = s.sectionsQty;
-      addAgg(agg, 'kryshka', kryshkaSize, kryshkaQty);
+      spansForAccessories.forEach(accSpan => {
+        addAgg(agg, 'kryshka', sizeBySpan(accSpan), s.sectionsQty);
+      });
 
       // Декоративная накладка (если столбы НЕ кирп/бетон)
       if (s.brick === 'no') {
@@ -420,21 +587,31 @@ function sizeBySpan(span){
       }
 
       // Планка завершающая
-      const finishSize = sizeBySpan(s.span);
-      const finishQty = s.sectionsQty;
-      addAgg(agg, 'finish', finishSize, finishQty);
+      spansForAccessories.forEach(accSpan => {
+        addAgg(agg, 'finish', sizeBySpan(accSpan), s.sectionsQty);
+      });
 
-      // Профтруба (если выбрано не "нет")
-      let profftrubaQty = 0;
-      if (s.pipe !== 'none') {
-        profftrubaQty = Math.ceil((2 * (s.height + s.depth)) / 6);
+      // Профтруба
+      if (s.brick !== 'yes' && s.pipe !== 'none') {
+        let profftrubaQty = 0;
+        if (s.itemType === 'gate' && s.gateType === 'sliding' && s.totalSpan >= 4) {
+          profftrubaQty = Math.ceil(((s.totalSpan * 2) + (s.height * 3)) / 6);
+        } else if (s.itemType === 'gate' && s.gateType === 'swing') {
+          profftrubaQty = Math.ceil(((s.height * 4) + (s.spanLeaf1 * 2) + (s.spanLeaf2 * 2)) / 6);
+        } else {
+          profftrubaQty = Math.ceil((2 * (s.height + s.depth)) / 6);
+        }
         addAgg(agg, 'profftruba', 6, profftrubaQty);
       }
 
       // Саморезы для стойки
-      addAgg(agg, 'screw_stoyka', '5.5x19', stoykaQty * 5);
+      if (s.brick !== 'yes') {
+        addAgg(agg, 'screw_stoyka', '5.5x19', stoykaQty * 5);
+      }
 
       // Саморезы ПШ
+      const kryshkaQty = spansForAccessories.length * s.sectionsQty;
+      const finishQty = spansForAccessories.length * s.sectionsQty;
       const screwPSHQty =
         (lamelQty * 4) +
         (krepezhQty * lamelQty) +
@@ -451,13 +628,14 @@ function sizeBySpan(span){
 lastFinalAgg = finalAgg;
 jPdfBtn.classList.remove('hidden');
   }
-function buildBomRows(finalAgg){
-  const maxRows = Math.max(1, ...BOM_ITEMS.map(it => (finalAgg[it.key]?.length || 0)));
+function buildBomRows(finalAgg, items){
+  const usedItems = items || visibleBomItems(finalAgg);
+  const maxRows = Math.max(1, ...usedItems.map(it => (finalAgg[it.key]?.length || 0)));
 
   const rows = [];
   for (let r = 0; r < maxRows; r++){
     const row = [];
-    BOM_ITEMS.forEach(it => {
+    usedItems.forEach(it => {
       const rec = finalAgg[it.key]?.[r];
       row.push(rec ? String(rec.size).replace('.', ',') : '—');
       row.push(rec ? String(Math.round(rec.qty)) : '—');
@@ -500,21 +678,33 @@ function downloadJaluziPdf(){
 
   // ===== Таблица введённых данных по секциям =====
   const secHead = [[
-    'Секция', 'Наименование', 'Высота, м', 'Расст. между, м', 'Секций, шт', 'Углы 90°, шт',
+    'Тип', '№', 'Наименование', 'Тип ворот', 'Высота, м', 'Ширина/пролёт, м', 'Кол-во, шт', 'Углы 90°, шт',
     'Кирп/бетон', 'Проф труба', 'Заглубление, м'
   ]];
 
-  const secBody = lastSectionsData.map((s, i) => ([
-    String(i + 1),
-    s.name === 'yukka' ? 'Юкка' : (s.name === 'hosta' ? 'Хоста' : s.name),
-    String(s.height).replace('.', ','),
-    String(s.span).replace('.', ','),
-    String(s.sectionsQty),
-    String(s.corners),
-    s.brick === 'yes' ? 'Да' : 'Нет',
-    s.pipe === 'none' ? 'нет' : (s.pipe === '60x60' ? '60×60' : (s.pipe === '80x80' ? '80×80' : s.pipe)),
-    String(s.depth).replace('.', ',')
-  ]));
+  const secBody = lastSectionsData.map((s, i) => {
+    const widthText = s.itemType === 'gate' && s.gateType === 'swing'
+      ? `${String(s.spanLeaf1).replace('.', ',')} + ${String(s.spanLeaf2).replace('.', ',')}`
+      : String(s.totalSpan).replace('.', ',');
+    const gateTypeText = s.itemType === 'gate' ? (s.gateType === 'swing' ? 'Распашные' : 'Откатные') : '—';
+    const pipeText = s.brick === 'yes'
+      ? '—'
+      : (s.pipe === 'none' ? 'нет' : (s.pipe === '60x60' ? '60×60' : (s.pipe === '80x80' ? '80×80' : s.pipe)));
+    const depthText = s.brick === 'yes' ? '—' : String(s.depth).replace('.', ',');
+    return [
+      itemTypeLabel(s.itemType),
+      String(i + 1),
+      s.name === 'yukka' ? 'Юкка' : (s.name === 'hosta' ? 'Хоста' : s.name),
+      gateTypeText,
+      String(s.height).replace('.', ','),
+      widthText,
+      String(s.sectionsQty),
+      String(s.corners),
+      s.brick === 'yes' ? 'Да' : 'Нет',
+      pipeText,
+      depthText
+    ];
+  });
 
   doc.autoTable({
   head: secHead,          // или [head1, head2] во второй таблице
@@ -553,19 +743,20 @@ function downloadJaluziPdf(){
   let y = doc.lastAutoTable.finalY + 8;
 
   // ===== Таблица расчёта (колонка-группами) =====
-  const head1 = BOM_ITEMS.map(it => ({
+  const pdfBomItems = visibleBomItems(lastFinalAgg);
+  const head1 = pdfBomItems.map(it => ({
     content: it.label.replace('\n', ' '),
     colSpan: 2,
     styles: { halign: 'center' }
   }));
 
   const head2 = [];
-  BOM_ITEMS.forEach(() => {
+  pdfBomItems.forEach(() => {
     head2.push('Размер, м');
     head2.push('Кол-во, шт');
   });
 
-  const bomBody = buildBomRows(lastFinalAgg);
+  const bomBody = buildBomRows(lastFinalAgg, pdfBomItems);
 
   doc.autoTable({
   startY: y,
