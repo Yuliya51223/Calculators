@@ -550,7 +550,7 @@ function sizeBySpan(span){
       let krepezhQty = 0;
       if (s.itemType === 'section') {
         if (s.totalSpan >= 2) {
-          krepezhQty = Math.floor(s.totalSpan / 1) * s.sectionsQty;
+          krepezhQty = Math.floor(s.totalSpan / 1 * s.sectionsQty);
         }
       } else if (s.itemType === 'wicket') {
         if (s.totalSpan >= 2) {
@@ -599,7 +599,7 @@ function sizeBySpan(span){
         } else if (s.itemType === 'gate' && s.gateType === 'swing') {
           profftrubaQty = Math.ceil(((s.height * 4) + (s.spanLeaf1 * 2) + (s.spanLeaf2 * 2)) / 6);
         } else {
-          profftrubaQty = Math.ceil((2 * (s.height + s.depth)) / 6);
+          profftrubaQty = Math.ceil(((s.sectionsQty + 1) * (s.height + s.depth)) / 6);
         }
         addAgg(agg, 'profftruba', 6, profftrubaQty);
       }
