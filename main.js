@@ -163,7 +163,7 @@ let lastFinalAgg = null;
         <div class="col">
           <div class="field j_span_single_wrap">
             <label>${itemType === 'section' ? 'Расстояние между столбов (м)' : 'Ширина (м)'} <span class="hint">${itemType === 'gate' ? '(от 0,5 м)' : '(от 0,5 до 3 м)'}</span></label>
-            <input class="j_span" type="number" min="0.5" ${itemType === 'section' || itemType === 'wicket' ? 'max="3"' : ''} step="0.01">
+            <input class="j_span" type="number" min="0.5" ${itemType === 'section' || itemType === 'wicket' ? 'max="4"' : ''} step="0.01">
           </div>
 
           ${itemType === 'gate' ? `
