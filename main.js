@@ -162,8 +162,8 @@ let lastFinalAgg = null;
 
         <div class="col">
           <div class="field j_span_single_wrap">
-            <label>${itemType === 'section' ? 'Расстояние между столбов (м)' : 'Ширина (м)'} <span class="hint">${itemType === 'gate' ? '(от 0,5 м)' : '(от 0,5 до 3 м)'}</span></label>
-            <input class="j_span" type="number" min="0.5" ${itemType === 'section' || itemType === 'wicket' ? 'max="4"' : ''} step="0.01">
+            <label>${itemType === 'section' ? 'Расстояние между столбов (м)' : 'Ширина (м)'} <span class="hint">${itemType === 'gate' ? '(от 0,5 м)' : '(от 0,5 до 4 м)'}</span></label>
+            <input class="j_span" type="number" min="0.5" ${itemType === 'section' || itemType === 'wicket' ? 'max="4"' : ''} step="0.1">
           </div>
 
           ${itemType === 'gate' ? `
@@ -487,11 +487,11 @@ function sizeBySpan(span){
         if (!isFinite(s.spanLeaf1) || s.spanLeaf1 < 0.5) { jErr.textContent = `${itemLabel} ${idx}: ширина первой створки должна быть не менее 0,5 м`; return; }
         if (!isFinite(s.spanLeaf2) || s.spanLeaf2 < 0.5) { jErr.textContent = `${itemLabel} ${idx}: ширина второй створки должна быть не менее 0,5 м`; return; }
       } else {
-        const maxSpan = s.itemType === 'section' || s.itemType === 'wicket' ? 3 : Infinity;
+        const maxSpan = s.itemType === 'section' || s.itemType === 'wicket' ? 4 : Infinity;
         if (!isFinite(s.span) || s.span < 0.5 || s.span > maxSpan) {
           jErr.textContent = s.itemType === 'section'
-            ? `${itemLabel} ${idx}: расстояние между столбов 0,5–3 м`
-            : `${itemLabel} ${idx}: ширина должна быть не менее 0,5 м${isFinite(maxSpan) ? ' и не более 3 м' : ''}`;
+            ? `${itemLabel} ${idx}: расстояние между столбов 0,5–4 м`
+            : `${itemLabel} ${idx}: ширина должна быть не менее 0,5 м${isFinite(maxSpan) ? ' и не более 4 м' : ''}`;
           return;
         }
       }
