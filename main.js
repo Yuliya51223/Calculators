@@ -614,7 +614,7 @@ function sizeBySpan(span){
       const finishQty = spansForAccessories.length * s.sectionsQty;
       const screwPSHQty =
         (lamelQty * 4) +
-        (krepezhQty * lamelQty) +
+        (krepezhQty * lamelQty / 2) +
         (kryshkaQty * 4) +
         (finishQty * 2) +
         (finishQty * krepezhQty);
