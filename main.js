@@ -550,7 +550,7 @@ function sizeBySpan(span){
       let krepezhQty = 0;
       if (s.itemType === 'section') {
         if (s.totalSpan >= 2) {
-          krepezhQty = Math.floor(s.totalSpan / 1 * s.sectionsQty);
+          krepezhQty = Math.floor(s.totalSpan / 1) * s.sectionsQty;
         }
       } else if (s.itemType === 'wicket') {
         if (s.totalSpan >= 2) {
