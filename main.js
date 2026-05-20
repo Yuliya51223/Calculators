@@ -614,10 +614,9 @@ function sizeBySpan(span){
       const finishQty = spansForAccessories.length * s.sectionsQty;
       const screwPSHQty =
         (lamelQty * 4) +
-        (krepezhQty * lamelQty / 2) +
+        (krepezhQty * 11) +
         (kryshkaQty * 4) +
-        (finishQty * 2) +
-        (finishQty * krepezhQty);
+        (finishQty * 2);
 
       addAgg(agg, 'screw_psh', '4.2x16', screwPSHQty);
     });
