@@ -162,8 +162,8 @@ let lastFinalAgg = null;
 
         <div class="col">
           <div class="field j_span_single_wrap">
-            <label>${itemType === 'section' ? 'Расстояние между столбов (м)' : 'Ширина (м)'} <span class="hint">${itemType === 'gate' ? '(от 0,5 м)' : '(от 0,5 до 4 м)'}</span></label>
-            <input class="j_span" type="number" min="0.5" ${itemType === 'section' || itemType === 'wicket' ? 'max="4"' : ''} step="0.1">
+            <label>${itemType === 'section' ? 'Расстояние между столбов (м)' : 'Ширина (м)'} <span class="hint">${itemType === 'gate' ? '(от 0,5 м)' : '(от 0,5 до 3 м)'}</span></label>
+            <input class="j_span" type="number" min="0.5" ${itemType === 'section' || itemType === 'wicket' ? 'max="3"' : ''} step="0.01">
           </div>
 
           ${itemType === 'gate' ? `
@@ -183,6 +183,7 @@ let lastFinalAgg = null;
 
           <div class="field">
             <label>Кирпичные/Бетонные столбы</label>
+            <div class="hint j-brick-note">Можно выбирать "Да", если не нужен расчёт профтруб</div>
             <select class="j_brick">
               <option value="">— выберите —</option>
               <option value="no">Нет</option>
@@ -355,6 +356,7 @@ let lastFinalAgg = null;
     }
 
     jTableWrap.innerHTML = `
+      <div class="calc-note">Все доборные элементы уже просуммированы</div>
       <div class="table-wrap">
         <table class="bom">
           <thead>
@@ -487,11 +489,11 @@ function sizeBySpan(span){
         if (!isFinite(s.spanLeaf1) || s.spanLeaf1 < 0.5) { jErr.textContent = `${itemLabel} ${idx}: ширина первой створки должна быть не менее 0,5 м`; return; }
         if (!isFinite(s.spanLeaf2) || s.spanLeaf2 < 0.5) { jErr.textContent = `${itemLabel} ${idx}: ширина второй створки должна быть не менее 0,5 м`; return; }
       } else {
-        const maxSpan = s.itemType === 'section' || s.itemType === 'wicket' ? 4 : Infinity;
+        const maxSpan = s.itemType === 'section' || s.itemType === 'wicket' ? 3 : Infinity;
         if (!isFinite(s.span) || s.span < 0.5 || s.span > maxSpan) {
           jErr.textContent = s.itemType === 'section'
-            ? `${itemLabel} ${idx}: расстояние между столбов 0,5–4 м`
-            : `${itemLabel} ${idx}: ширина должна быть не менее 0,5 м${isFinite(maxSpan) ? ' и не более 4 м' : ''}`;
+            ? `${itemLabel} ${idx}: расстояние между столбов 0,5–3 м`
+            : `${itemLabel} ${idx}: ширина должна быть не менее 0,5 м${isFinite(maxSpan) ? ' и не более 3 м' : ''}`;
           return;
         }
       }
@@ -569,7 +571,12 @@ function sizeBySpan(span){
 
       // Крышка
       spansForAccessories.forEach(accSpan => {
-        addAgg(agg, 'kryshka', sizeBySpan(accSpan), s.sectionsQty);
+        if (s.itemType === 'gate' && Math.abs(accSpan - 4) < 1e-9) {
+          // 4-метровые планки не изготавливаются: на одни ворота идут 2 планки по 2 м
+          addAgg(agg, 'kryshka', 2, s.sectionsQty * 2);
+        } else {
+          addAgg(agg, 'kryshka', sizeBySpan(accSpan), s.sectionsQty);
+        }
       });
 
       // Декоративная накладка (если столбы НЕ кирп/бетон)
@@ -588,7 +595,12 @@ function sizeBySpan(span){
 
       // Планка завершающая
       spansForAccessories.forEach(accSpan => {
-        addAgg(agg, 'finish', sizeBySpan(accSpan), s.sectionsQty);
+        if (s.itemType === 'gate' && Math.abs(accSpan - 4) < 1e-9) {
+          // 4-метровые планки не изготавливаются: на одни ворота идут 2 планки по 2 м
+          addAgg(agg, 'finish', 2, s.sectionsQty * 2);
+        } else {
+          addAgg(agg, 'finish', sizeBySpan(accSpan), s.sectionsQty);
+        }
       });
 
       // Профтруба
@@ -599,7 +611,7 @@ function sizeBySpan(span){
         } else if (s.itemType === 'gate' && s.gateType === 'swing') {
           profftrubaQty = Math.ceil(((s.height * 4) + (s.spanLeaf1 * 2) + (s.spanLeaf2 * 2)) / 6);
         } else {
-          profftrubaQty = Math.ceil(((s.sectionsQty + 1) * (s.height + s.depth)) / 6);
+          profftrubaQty = Math.ceil((2 * (s.height + s.depth)) / 6);
         }
         addAgg(agg, 'profftruba', 6, profftrubaQty);
       }
@@ -614,9 +626,10 @@ function sizeBySpan(span){
       const finishQty = spansForAccessories.length * s.sectionsQty;
       const screwPSHQty =
         (lamelQty * 4) +
-        (krepezhQty * 11) +
+        (krepezhQty * lamelQty) +
         (kryshkaQty * 4) +
-        (finishQty * 2);
+        (finishQty * 2) +
+        (finishQty * krepezhQty);
 
       addAgg(agg, 'screw_psh', '4.2x16', screwPSHQty);
     });
@@ -2229,6 +2242,457 @@ function downloadSoffitPdf(){
   }
   mpType?.addEventListener('change', mpShowBlock);
   mpShowBlock();
+
+
+  // ===================== КРОВЛЯ ПО ВЫСОТЕ КОНЬКА =====================
+  const rhType = document.getElementById('rh_type');
+  const rhA = document.getElementById('rh_a');
+  const rhB = document.getElementById('rh_b');
+  const rhH = document.getElementById('rh_h');
+  const rhC = document.getElementById('rh_c');
+  const rhCWrap = document.getElementById('rh_c_wrap');
+  const rhCalcBtn = document.getElementById('rh_calc');
+  const rhPdfBtn = document.getElementById('rh_pdf');
+  const rhErr = document.getElementById('rh_err');
+  const rhResultWrap = document.getElementById('rh_result_wrap');
+  const rhResultSummary = document.getElementById('rh_result_summary');
+  const rhSideSvg = document.getElementById('rh_side_svg');
+  const rh3dSvg = document.getElementById('rh_3d_svg');
+  const rhTopSvg = document.getElementById('rh_top_svg');
+  let rhLast = null;
+
+  function rhNum(v){
+    const x = Number(String(v ?? '').replace(',', '.'));
+    return Number.isFinite(x) ? x : 0;
+  }
+  function rhFmt(v, d=2){
+    return Number(v).toFixed(d).replace('.', ',');
+  }
+  function rhTypeLabel(t){
+    return ({single:'Односкатная', double:'Двускатная', hip:'Вальмовая', tent:'Шатровая'})[t] || t;
+  }
+  function rhDimLabel(key){
+    const map={a:rhA,b:rhB,c:rhC,h:rhH}; const val=rhNum(map[key]?.value);
+    return `${key} = ${val>0 ? rhFmt(val) : '—'} м`;
+  }
+  function rhArrowDefs(){ return ''; }
+  function rhArrowHead(x,y,angle,key){
+    const L=7, A=0.55;
+    const x1=x-L*Math.cos(angle-A), y1=y-L*Math.sin(angle-A);
+    const x2=x-L*Math.cos(angle+A), y2=y-L*Math.sin(angle+A);
+    return `<path class="rh-dim" data-dim="${key}" d="M${x1},${y1} L${x},${y} L${x2},${y2}"/>`;
+  }
+  function rhDimLine(key,x1,y1,x2,y2,tx,ty,anchor='middle'){
+    const ang=Math.atan2(y2-y1,x2-x1);
+    return `<g class="rh-dim-group" data-dim="${key}">
+      <line class="rh-dim" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>
+      ${rhArrowHead(x1,y1,ang+Math.PI,key)}${rhArrowHead(x2,y2,ang,key)}
+      <text class="rh-dim-text" x="${tx}" y="${ty}" text-anchor="${anchor}">${rhDimLabel(key)}</text>
+    </g>`;
+  }
+  function rhReferenceType(){
+    const t=rhType?.value||'single';
+    return t==='double'?'double':t==='hip'?'hip':t==='tent'?'tent':'single';
+  }
+
+  function rhLiveLabel(key,x,y,angle=0,w=116,h=32){
+    const val=rhDimLabel(key);
+    return `<g class="rh-dim-group rh-live-label" data-dim="${key}" transform="rotate(${angle} ${x} ${y})">
+      <rect x="${x-w/2}" y="${y-h/2}" width="${w}" height="${h}" rx="4"/>
+      <text class="rh-dim-text" x="${x}" y="${y+5}" text-anchor="middle">${val}</text>
+    </g>`;
+  }
+
+  function rhStaticArrow(key,x1,y1,x2,y2,labelX,labelY,angle=0){
+    const a=Math.atan2(y2-y1,x2-x1);
+    return `<g class="rh-dim-group rh-added-arrow" data-dim="${key}">
+      <line class="rh-source-added-arrow" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>
+      ${rhArrowHead(x1,y1,a+Math.PI,key)}${rhArrowHead(x2,y2,a,key)}
+      ${rhLiveLabel(key,labelX,labelY,angle)}
+    </g>`;
+  }
+
+  function rhRenderSide(){
+    if(!rhSideSvg)return;
+    const t=rhReferenceType();
+
+    if(t==='single'){
+      rhSideSvg.innerHTML=`<svg viewBox="0 0 470 320" class="rh-live-svg">
+        <image href="assets/roof_single_side.svg" x="0" y="0" width="430" height="300"/>
+        ${rhLiveLabel('a',171,252,0,116,32)}
+        ${rhLiveLabel('h',388,133,0,92,32)}
+      </svg>`;
+      return;
+    }
+
+    if(t==='double'){
+      rhSideSvg.innerHTML=`<svg viewBox="0 0 555 430" class="rh-live-svg">
+        <image href="assets/roof_double_side.svg" x="0" y="0" width="500" height="410"/>
+        ${rhLiveLabel('a',220,315,0,116,32)}
+        ${rhLiveLabel('h',510,197,0,92,32)}
+      </svg>`;
+      return;
+    }
+
+    if(t==='hip'){
+      rhSideSvg.innerHTML=`<svg viewBox="0 0 585 545" class="rh-live-svg">
+        <image href="assets/roof_hip_side.svg" x="0" y="0" width="520" height="500"/>
+        ${rhLiveLabel('a',220,230,0,116,32)}
+        ${rhLiveLabel('h',510,120,0,92,32)}
+        ${rhLiveLabel('c',230,267,0,116,32)}
+        ${rhLiveLabel('b',220,480,0,116,32)}
+        ${rhLiveLabel('h',510,370,0,92,32)}
+      </svg>`;
+      return;
+    }
+
+    // Шатровая: обе боковые схемы имеют свою ширину, h общий справа.
+    rhSideSvg.innerHTML=`<svg viewBox="0 0 585 700" class="rh-live-svg">
+      <image href="assets/roof_tent_side.svg" x="0" y="0" width="520" height="650"/>
+      ${rhLiveLabel('a',220,318,0,116,32)}
+      ${rhLiveLabel('h',510,200,0,92,32)}
+      ${rhLiveLabel('b',220,532,0,116,32)}
+      ${rhLiveLabel('h',510,420,0,92,32)}
+    </svg>`;
+  }
+
+  function rhRender3d(){
+    if(!rh3dSvg)return;
+    const t=rhReferenceType();
+
+    if(t==='single'){
+      rh3dSvg.innerHTML=`<svg viewBox="0 0 420 340" class="rh-live-svg">
+        <image href="assets/roof_single_3d.svg" x="0" y="0" width="380" height="300"/>
+        ${rhStaticArrow('a',26,200,104,274,50,255,43)}
+        ${rhStaticArrow('b',112,273,350,257,231,290,-4)}
+      </svg>`;
+      return;
+    }
+
+    if(t==='double'){
+      rh3dSvg.innerHTML=`<svg viewBox="0 0 700 465" class="rh-live-svg">
+        <image href="assets/roof_double_3d.svg" x="0" y="0" width="650" height="410"/>
+       ${rhLiveLabelLarge('a',100,365,15,170,50)}
+       ${rhLiveLabelLarge('b',450,350,-13,170,46)}
+      </svg>`;
+      return;
+    }
+
+    if(t==='hip'){
+      rh3dSvg.innerHTML=`<svg viewBox="0 0 700 485" class="rh-live-svg">
+        <image href="assets/roof_hip_3d.svg" x="0" y="0" width="650" height="430"/>
+        ${rhLiveLabel('c',319,83,-11,116,32)}
+        ${rhLiveLabel('a',115,340,15,116,32)}
+        ${rhLiveLabel('b',425,335,-13,116,32)}
+      </svg>`;
+      return;
+    }
+
+    rh3dSvg.innerHTML=`<svg viewBox="0 0 700 505" class="rh-live-svg">
+      <image href="assets/roof_tent_3d.svg" x="0" y="0" width="650" height="450"/>
+      ${rhLiveLabel('a',160,350,15,116,32)}
+      ${rhLiveLabel('b',450,355,-13,116,32)}
+    </svg>`;
+  }
+
+function rhLiveLabel(key,x,y,angle=0,w=116,h=32){
+    const val=rhDimLabel(key);
+    return `<g class="rh-dim-group rh-live-label" data-dim="${key}" transform="rotate(${angle} ${x} ${y})">
+      <rect x="${x-w/2}" y="${y-h/2}" width="${w}" height="${h}" rx="4"/>
+      <text class="rh-dim-text" x="${x}" y="${y+5}" text-anchor="middle">${val}</text>
+    </g>`;
+}
+
+function rhLiveLabelLarge(key,x,y,angle=0,w=170,h=46){
+    const val=rhDimLabel(key);
+    return `<g class="rh-dim-group rh-live-label rh-live-label-large" data-dim="${key}" transform="rotate(${angle} ${x} ${y})">
+      <rect x="${x-w/2}" y="${y-h/2}" width="${w}" height="${h}" rx="5"/>
+      <text class="rh-dim-text" x="${x}" y="${y+7}" text-anchor="middle">${val}</text>
+    </g>`;
+}
+
+  function rhHighlightDim(key, on=true){
+    document.querySelectorAll(`.rh-dim-group[data-dim="${key}"]`).forEach(el=>el.classList.toggle('active', on));
+  }
+  function rhRenderInputSchemes(){
+    rhRenderSide();
+    rhRender3d();
+    const active = document.activeElement;
+    if (active===rhA) rhHighlightDim('a', true);
+    if (active===rhB) rhHighlightDim('b', true);
+    if (active===rhH) rhHighlightDim('h', true);
+    if (active===rhC) rhHighlightDim('c', true);
+    if (active===rhC) rhHighlightDim('c', true);
+  }
+
+  function rhCompute(){
+    const type=rhType?.value||'single'; const a=rhNum(rhA?.value),b=rhNum(rhB?.value),h=rhNum(rhH?.value),c=rhNum(rhC?.value);
+    if(!(a>0)||!(b>0)||!(h>0))return{err:'Заполните длину кровли (a), ширину кровли (b) и высоту кровли (h).'};
+    if(type==='hip'&&(!(c>0)||c>=b))return{err:'Для вальмовой кровли укажите длину конька (c), меньшую длины кровли (b).'};
+    const slopes=[];let ridge=0;
+    if(type==='single')slopes.push({name:'Скат 1',len:Math.hypot(a,h)});
+    else if(type==='double'){const L=Math.hypot(a/2,h);slopes.push({name:'Скат 1',len:L},{name:'Скат 2',len:L});ridge=b;}
+    else if(type==='hip'){const main=Math.hypot(a/2,h),end=Math.hypot((b-c)/2,h);slopes.push({name:'Скат 1',len:main},{name:'Скат 2',len:main},{name:'Скат 3',len:end},{name:'Скат 4',len:end});ridge=c;}
+    else{const L1=Math.hypot(a/2,h),L2=Math.hypot(b/2,h);slopes.push({name:'Скат 1',len:L1},{name:'Скат 2',len:L1},{name:'Скат 3',len:L2},{name:'Скат 4',len:L2});}
+    return{type,a,b,c,h,slopes,ridge};
+  }
+
+  function rhPlanSvg(d){
+    const W=760,H=560;
+    const marginL=110, marginR=70, marginT=55, marginB=110;
+    const maxW=W-marginL-marginR, maxH=H-marginT-marginB;
+
+    // Масштаб строго по фактическому соотношению сторон a:b
+    // Чертёж сверху в едином масштабе:
+    // по горизонтали — ширина кровли b,
+    // по вертикали — длина кровли a.
+    const k=Math.min(maxW/d.b,maxH/d.a);
+    const w=d.b*k, hp=d.a*k;
+    const x=(W-w)/2, y=(H-hp)/2-10;
+    const cx=x+w/2, cy=y+hp/2;
+
+    const head=(x2,y2,ang)=>{
+      const len=12, a1=ang-Math.PI/7, a2=ang+Math.PI/7;
+      return `<path class="rh-drawing-arrow" d="M${x2-len*Math.cos(a1)},${y2-len*Math.sin(a1)} L${x2},${y2} L${x2-len*Math.cos(a2)},${y2-len*Math.sin(a2)}"/>`;
+    };
+
+    const slopeArrow=(x1,y1,x2,y2,label)=>{
+      const ang=Math.atan2(y2-y1,x2-x1);
+      const mx=(x1+x2)/2;
+      const my=(y1+y2)/2;
+      const isMostlyVertical=Math.abs(y2-y1) >= Math.abs(x2-x1);
+
+      const tx=isMostlyVertical ? mx+22 : mx;
+      const ty=isMostlyVertical ? my+6 : my-14;
+      const anchor=isMostlyVertical ? 'start' : 'middle';
+
+      return `<g class="rh-drawing-slope">
+        <line class="rh-drawing-arrow" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>
+        ${head(x2,y2,ang)}
+        <text class="rh-drawing-label" x="${tx}" y="${ty}" text-anchor="${anchor}">${label}</text>
+      </g>`;
+    };
+
+    const dim=(x1,y1,x2,y2,label,tx,ty,rotate=0)=>{
+      const ang=Math.atan2(y2-y1,x2-x1);
+      return `<g>
+        <line class="rh-drawing-dim" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>
+        ${head(x1,y1,ang+Math.PI)}${head(x2,y2,ang)}
+        <text class="rh-drawing-dimtext" x="${tx}" y="${ty}" text-anchor="middle" transform="rotate(${rotate} ${tx} ${ty})">${label}</text>
+      </g>`;
+    };
+
+    let body=`<rect class="rh-drawing-roof" x="${x}" y="${y}" width="${w}" height="${hp}"/>`;
+    let slopes='';
+
+    if(d.type==='single'){
+      const len=Math.min(hp*0.38,150);
+      slopes += slopeArrow(
+        cx,cy+len/2,
+        cx,cy-len/2,
+        `Скат 1: ${rhFmt(d.slopes[0].len)} м`
+      );
+
+    }else if(d.type==='double'){
+      body += `<line class="rh-drawing-ridge" x1="${x}" y1="${cy}" x2="${x+w}" y2="${cy}"/>`;
+
+      const halfH=hp/2;
+      const len=Math.min(halfH*0.48,115);
+      const topCY=y+halfH/2;
+      const botCY=cy+halfH/2;
+
+      slopes += slopeArrow(
+        cx,topCY+len/2,
+        cx,topCY-len/2,
+        `Скат 1: ${rhFmt(d.slopes[0].len)} м`
+      );
+
+      slopes += slopeArrow(
+        cx,botCY-len/2,
+        cx,botCY+len/2,
+        `Скат 2: ${rhFmt(d.slopes[1].len)} м`
+      );
+
+    }else if(d.type==='hip'){
+      const ridgePx=Math.min(w*0.88,Math.max(0,d.c*k));
+      const rx1=cx-ridgePx/2, rx2=cx+ridgePx/2;
+
+      body += `<line class="rh-drawing-ridge" x1="${rx1}" y1="${cy}" x2="${rx2}" y2="${cy}"/>
+        <text class="rh-drawing-label" x="${cx}" y="${cy-12}" text-anchor="middle">Длина конька c = ${rhFmt(d.c)} м</text>
+        <line class="rh-drawing-roof" x1="${x}" y1="${y}" x2="${rx1}" y2="${cy}"/>
+        <line class="rh-drawing-roof" x1="${x}" y1="${y+hp}" x2="${rx1}" y2="${cy}"/>
+        <line class="rh-drawing-roof" x1="${x+w}" y1="${y}" x2="${rx2}" y2="${cy}"/>
+        <line class="rh-drawing-roof" x1="${x+w}" y1="${y+hp}" x2="${rx2}" y2="${cy}"/>`;
+
+      const mainLen=Math.min((hp/2)*0.44,105);
+      const topCY=y+hp*0.25;
+      const botCY=y+hp*0.75;
+
+      slopes += slopeArrow(
+        cx,topCY+mainLen/2,
+        cx,topCY-mainLen/2,
+        `Скат 1: ${rhFmt(d.slopes[0].len)} м`
+      );
+
+      slopes += slopeArrow(
+        cx,botCY-mainLen/2,
+        cx,botCY+mainLen/2,
+        `Скат 2: ${rhFmt(d.slopes[1].len)} м`
+      );
+
+      const leftWidth=Math.max(1,rx1-x);
+      const rightWidth=Math.max(1,x+w-rx2);
+      const sideLen=Math.min(Math.min(leftWidth,rightWidth)*0.46,95);
+      const leftCX=(x+rx1)/2;
+      const rightCX=(rx2+x+w)/2;
+
+      slopes += slopeArrow(
+        leftCX+sideLen/2,cy,
+        leftCX-sideLen/2,cy,
+        `Скат 3: ${rhFmt(d.slopes[2].len)} м`
+      );
+
+      slopes += slopeArrow(
+        rightCX-sideLen/2,cy,
+        rightCX+sideLen/2,cy,
+        `Скат 4: ${rhFmt(d.slopes[3].len)} м`
+      );
+
+    }else{
+      body += `<line class="rh-drawing-roof" x1="${cx}" y1="${cy}" x2="${x}" y2="${y}"/>
+        <line class="rh-drawing-roof" x1="${cx}" y1="${cy}" x2="${x+w}" y2="${y}"/>
+        <line class="rh-drawing-roof" x1="${cx}" y1="${cy}" x2="${x}" y2="${y+hp}"/>
+        <line class="rh-drawing-roof" x1="${cx}" y1="${cy}" x2="${x+w}" y2="${y+hp}"/>`;
+
+      const vLen=Math.min((hp/2)*0.42,100);
+      const hLen=Math.min((w/2)*0.30,95);
+      const topCY=y+hp*0.22;
+      const botCY=y+hp*0.78;
+      const leftCX=x+w*0.22;
+      const rightCX=x+w*0.78;
+
+      slopes += slopeArrow(
+        cx,topCY+vLen/2,
+        cx,topCY-vLen/2,
+        `Скат 1: ${rhFmt(d.slopes[0].len)} м`
+      );
+
+      slopes += slopeArrow(
+        cx,botCY-vLen/2,
+        cx,botCY+vLen/2,
+        `Скат 2: ${rhFmt(d.slopes[1].len)} м`
+      );
+
+      slopes += slopeArrow(
+        leftCX+hLen/2,cy,
+        leftCX-hLen/2,cy,
+        `Скат 3: ${rhFmt(d.slopes[2].len)} м`
+      );
+
+      slopes += slopeArrow(
+        rightCX-hLen/2,cy,
+        rightCX+hLen/2,cy,
+        `Скат 4: ${rhFmt(d.slopes[3].len)} м`
+      );
+    }
+
+    const dimA=dim(x-55,y,x-55,y+hp,`Длина кровли a = ${rhFmt(d.a)} м`,x-88,cy,-90);
+    const dimB=dim(x,y+hp+55,x+w,y+hp+55,`Ширина кровли b = ${rhFmt(d.b)} м`,cx,y+hp+87);
+
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Чертёж кровли сверху">
+      ${body}${slopes}${dimA}${dimB}
+    </svg>`;
+  }
+
+  function rhRenderResult(d){
+    if (!rhResultWrap || !rhResultSummary || !rhTopSvg) return;
+    const slopeRows=d.slopes.map(s=>`<div class="rh-summary-item"><b>${s.name}:</b> ${rhFmt(s.len)} м</div>`).join('');
+    rhResultSummary.innerHTML=`<div class="rh-summary-grid">
+      <div class="rh-summary-item"><b>Тип кровли:</b> ${rhTypeLabel(d.type)}</div>
+      <div class="rh-summary-item"><b>Длина кровли:</b> ${rhFmt(d.a)} м</div>
+      <div class="rh-summary-item"><b>Ширина кровли:</b> ${rhFmt(d.b)} м</div>
+      <div class="rh-summary-item"><b>Высота кровли:</b> ${rhFmt(d.h)} м</div>
+      ${slopeRows}
+    </div>`;
+    rhTopSvg.innerHTML=rhPlanSvg(d);
+    rhResultWrap.classList.remove('hidden');
+  }
+
+  function rhCalculate(){
+    if (rhErr) rhErr.textContent='';
+    const d=rhCompute();
+    if (d.err){ if(rhErr) rhErr.textContent=d.err; rhResultWrap?.classList.add('hidden'); return; }
+    rhLast=d;
+    rhRenderResult(d);
+  }
+
+  function rhPdfArrow(doc,x1,y1,x2,y2){
+    doc.line(x1,y1,x2,y2);
+    const ang=Math.atan2(y2-y1,x2-x1), len=3;
+    doc.line(x2,y2,x2-len*Math.cos(ang-.45),y2-len*Math.sin(ang-.45));
+    doc.line(x2,y2,x2-len*Math.cos(ang+.45),y2-len*Math.sin(ang+.45));
+  }
+  function rhDownloadPdf(){
+    if (!rhLast) return;
+    const jsPDF=window.jspdf?.jsPDF;
+    if (!jsPDF){ if(rhErr) rhErr.textContent='PDF не может быть создан: jsPDF не загружен'; return; }
+    const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    try{
+      let fontB64=window.__PDF_FONT_MONTSERRAT__;
+      if(fontB64){ fontB64=fontB64.replace(/\s+/g,''); doc.addFileToVFS('Montserrat-Regular.ttf',fontB64); doc.addFont('Montserrat-Regular.ttf','Montserrat','normal'); doc.setFont('Montserrat','normal'); }
+    }catch(e){}
+    const d=rhLast;
+    doc.setFontSize(15); doc.text('Расчёт кровли по высоте конька',14,14);
+    doc.setFontSize(10);
+    let ty=23;
+    const add=(l,v)=>{doc.text(`${l}: ${v}`,14,ty);ty+=6;};
+    add('Тип кровли',rhTypeLabel(d.type)); add('Длина кровли (a)',`${rhFmt(d.a)} м`); add('Ширина кровли (b)',`${rhFmt(d.b)} м`); add('Высота кровли (h)',`${rhFmt(d.h)} м`); if(d.type==='hip') add('Длина конька (c)',`${rhFmt(d.c)} м`);
+    d.slopes.forEach(s=>add(s.name,`${rhFmt(s.len)} м`));
+
+    const x=105,y=27,w=160,hp=90,cx=x+w/2,cy=y+hp/2;
+    doc.setLineWidth(.5); doc.rect(x,y,w,hp);
+    doc.setFontSize(9);
+    if(d.type==='single'){
+      rhPdfArrow(doc,x+20,cy,x+w-20,cy); doc.text(`Скат 1: ${rhFmt(d.slopes[0].len)} м`,cx-22,cy-5);
+    }else if(d.type==='double'){
+      doc.setLineDashPattern([2,2],0); doc.line(x,cy,x+w,cy); doc.setLineDashPattern([],0);
+      rhPdfArrow(doc,cx-35,cy,cx-35,y+8); rhPdfArrow(doc,cx+35,cy,cx+35,y+hp-8);
+      doc.text(`Скат 1: ${rhFmt(d.slopes[0].len)} м`,cx-60,y+17); doc.text(`Скат 2: ${rhFmt(d.slopes[1].len)} м`,cx+8,y+hp-12);
+    }else if(d.type==='hip'){
+      if(d.a>=d.b){
+        const rpx=Math.max(0,w-hp); const r1=cx-rpx/2,r2=cx+rpx/2;
+        doc.setLineDashPattern([2,2],0);doc.line(r1,cy,r2,cy);doc.setLineDashPattern([],0);
+        doc.line(x,y,r1,cy);doc.line(x,y+hp,r1,cy);doc.line(x+w,y,r2,cy);doc.line(x+w,y+hp,r2,cy);
+        rhPdfArrow(doc,cx-25,cy,cx-25,y+8);rhPdfArrow(doc,cx+25,cy,cx+25,y+hp-8);rhPdfArrow(doc,r1,cy,x+8,cy);rhPdfArrow(doc,r2,cy,x+w-8,cy);
+      }else{
+        const rpy=Math.max(0,hp-w*.35); const r1=cy-rpy/2,r2=cy+rpy/2;
+        doc.setLineDashPattern([2,2],0);doc.line(cx,r1,cx,r2);doc.setLineDashPattern([],0);
+        doc.line(x,y,cx,r1);doc.line(x+w,y,cx,r1);doc.line(x,y+hp,cx,r2);doc.line(x+w,y+hp,cx,r2);
+        rhPdfArrow(doc,cx,r1,cx,y+8);rhPdfArrow(doc,cx,r2,cx,y+hp-8);rhPdfArrow(doc,cx,cy,x+8,cy);rhPdfArrow(doc,cx,cy,x+w-8,cy);
+      }
+      doc.text(`Скаты 1–4: ${rhFmt(d.slopes[0].len)} м`,cx-25,y+hp+12);
+    }else{
+      doc.line(cx,cy,x,y);doc.line(cx,cy,x+w,y);doc.line(cx,cy,x,y+hp);doc.line(cx,cy,x+w,y+hp);
+      rhPdfArrow(doc,cx-20,cy,cx-20,y+8);rhPdfArrow(doc,cx+20,cy,cx+20,y+hp-8);rhPdfArrow(doc,cx,cy,x+8,cy);rhPdfArrow(doc,cx,cy,x+w-8,cy);
+      doc.text(`Скаты 1–2: ${rhFmt(d.slopes[0].len)} м`,x,y+hp+12); doc.text(`Скаты 3–4: ${rhFmt(d.slopes[2].len)} м`,x+82,y+hp+12);
+    }
+    doc.setLineDashPattern([],0);
+    doc.line(x,y+hp+8,x+w,y+hp+8); doc.text(`Длина a = ${rhFmt(d.a)} м`,cx-20,y+hp+16);
+    doc.line(x-8,y,x-8,y+hp); doc.text(`Ширина b = ${rhFmt(d.b)} м`,x-36,cy,{angle:90});
+    doc.save('roof_height_calc.pdf');
+  }
+
+  function rhToggleC(){if(rhCWrap)rhCWrap.style.display=(rhType?.value==='hip')?'':'none';}
+  rhType?.addEventListener('change',()=>{rhToggleC();rhRenderInputSchemes();rhResultWrap?.classList.add('hidden');rhLast=null;});
+  [[rhA,'a'],[rhB,'b'],[rhC,'c'],[rhH,'h']].forEach(([el,key])=>{
+    el?.addEventListener('focus',()=>rhHighlightDim(key,true));
+    el?.addEventListener('blur',()=>rhHighlightDim(key,false));
+    el?.addEventListener('input',()=>{rhRenderInputSchemes();rhHighlightDim(key,true);rhResultWrap?.classList.add('hidden');rhLast=null;});
+  });
+  rhCalcBtn?.addEventListener('click',rhCalculate);
+  rhPdfBtn?.addEventListener('click',rhDownloadPdf);
+  rhToggleC();
+  rhRenderInputSchemes();
 
   // ===================== КРОВЛЯ =====================
   const rRidge = document.getElementById('r_ridge');

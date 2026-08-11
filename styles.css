@@ -570,3 +570,237 @@ select:disabled{
     padding: 10px 12px;
   }
 }
+
+/* ===== Кровля по высоте конька ===== */
+.rh-input-layout{
+  display:grid;
+  grid-template-columns:minmax(250px, 0.8fr) minmax(440px, 1.6fr);
+  gap:24px;
+  align-items:start;
+  margin-top:12px;
+}
+.rh-fields{
+  display:grid;
+  gap:14px;
+}
+.rh-fields input,.rh-fields select{max-width:100%;}
+.rh-schemes{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.rh-scheme-card{
+  border:1px solid #d8d8d8;
+  border-radius:12px;
+  padding:10px;
+  background:#fff;
+}
+.rh-scheme-title,.rh-result-title{
+  font-size:13px;
+  font-weight:600;
+  margin-bottom:6px;
+}
+.rh-result-title{margin-top:14px;}
+.rh-svg-wrap svg,.rh-top-svg svg{
+  width:100%;
+  height:auto;
+  display:block;
+}
+.rh-top-svg{
+  max-width:720px;
+  padding:8px;
+  border:1px solid #d8d8d8;
+  border-radius:12px;
+  background:#fff;
+  box-sizing:border-box;
+}
+.rh-dim{
+  stroke:#7a7a7a;
+  stroke-width:1.8;
+  fill:none;
+  transition:stroke .15s, stroke-width .15s;
+}
+.rh-dim-text{
+  fill:#555;
+  font-size:12px;
+  font-family:Montserrat, sans-serif;
+  font-weight:600;
+  transition:fill .15s, font-weight .15s;
+}
+.rh-dim-group.active .rh-dim{
+  stroke:#0067c5;
+  stroke-width:3;
+}
+.rh-dim-group.active .rh-dim-text{
+  fill:#0067c5;
+  font-weight:700;
+}
+.rh-roof-line{stroke:#111;stroke-width:2;fill:none;}
+.rh-roof-fill{fill:#f3f3f3;stroke:#111;stroke-width:2;}
+.rh-ridge{stroke:#111;stroke-width:2;stroke-dasharray:6 4;}
+.rh-slope-arrow{stroke:#111;stroke-width:1.8;fill:none;}
+.rh-plan-label{fill:#111;font-family:Montserrat,sans-serif;font-size:12px;font-weight:600;}
+.rh-plan-sub{fill:#555;font-family:Montserrat,sans-serif;font-size:11px;}
+.rh-summary-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px 24px;
+}
+.rh-summary-item{font-size:14px;}
+@media (max-width:820px){
+  .rh-input-layout{grid-template-columns:1fr;}
+  .rh-schemes{grid-template-columns:1fr;}
+  .rh-summary-grid{grid-template-columns:1fr;}
+}
+
+.rh-reference-svg{
+  display:block;
+  width:100%;
+  height:100%;
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+}
+
+.rh-live-label rect{
+  fill:#fff;
+  opacity:.98;
+  transition:fill .15s, opacity .15s;
+}
+.rh-live-label.active rect,
+.rh-dim-group.active .rh-live-label rect{
+  fill:#e7f2ff;
+}
+.rh-live-label.active .rh-dim-text,
+.rh-dim-group.active .rh-live-label .rh-dim-text{
+  fill:#0067c5;
+  font-weight:700;
+}
+.rh-source-added-arrow{
+  stroke:#111;
+  stroke-width:2;
+  fill:none;
+}
+.rh-added-arrow.active .rh-source-added-arrow,
+.rh-added-arrow.active path{
+  stroke:#0067c5;
+}
+
+.rh-live-label .rh-dim-text{
+  font-size:16px !important;
+  font-weight:700;
+}
+
+/* allow dynamic roof labels to extend without clipping */
+#rh_side_svg svg,
+#rh_3d_svg svg{
+  overflow: visible;
+}
+
+.rh-live-svg{overflow:visible}
+.rh-live-label .rh-dim-text{
+  font-size:23px !important;
+  font-weight:700;
+}
+
+.rh-live-label-large .rh-dim-text {
+    font-size: 28px !important;
+    font-weight: 700 !important;
+}
+/* Чертёж результата кровли */
+.rh-drawing-roof{
+  stroke:#111;
+  stroke-width:2.2;
+  fill:none;
+}
+rect.rh-drawing-roof{
+  fill:#fff;
+}
+.rh-drawing-ridge{
+  stroke:#111;
+  stroke-width:2.2;
+  fill:none;
+}
+.rh-drawing-arrow{
+  stroke:#111;
+  stroke-width:2.2;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.rh-drawing-label{
+  fill:#111;
+  font-family:Montserrat,sans-serif;
+  font-size:17px;
+  font-weight:700;
+}
+.rh-drawing-dim{
+  stroke:#777;
+  stroke-width:1.8;
+  fill:none;
+}
+.rh-drawing-dimtext{
+  fill:#111;
+  font-family:Montserrat,sans-serif;
+  font-size:17px;
+  font-weight:700;
+}
+
+
+/* ===== Чертёж результата кровли: технический вид ===== */
+.rh-top-svg,
+.rh-top-svg svg{
+  background:#fff;
+}
+.rh-drawing-roof{
+  stroke:#111;
+  stroke-width:2;
+  fill:none !important;
+  vector-effect:non-scaling-stroke;
+}
+rect.rh-drawing-roof{
+  fill:#fff !important;
+}
+.rh-drawing-ridge{
+  stroke:#111;
+  stroke-width:2;
+  fill:none;
+  vector-effect:non-scaling-stroke;
+}
+.rh-drawing-arrow{
+  stroke:#111;
+  stroke-width:2;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;
+}
+.rh-drawing-label{
+  fill:#111;
+  font-family:Montserrat,sans-serif;
+  font-size:16px;
+  font-weight:700;
+}
+.rh-drawing-dim{
+  stroke:#777;
+  stroke-width:1.6;
+  fill:none;
+  vector-effect:non-scaling-stroke;
+}
+.rh-drawing-dimtext{
+  fill:#111;
+  font-family:Montserrat,sans-serif;
+  font-size:16px;
+  font-weight:700;
+}
+
+/* Примечания калькулятора жалюзийного забора */
+.calc-note{
+  margin: 10px 0 8px;
+  font-size: 13px;
+  color: #555;
+}
+.j-brick-note{
+  margin: -2px 0 6px;
+  line-height: 1.3;
+}
