@@ -272,6 +272,64 @@
 </section>
 
 
+
+<!-- КАЛЬКУЛЯТОР КРОВЛИ ПО ВЫСОТЕ КОНЬКА -->
+<section class="card calc-item" data-calc="roof-height" style="margin-top:16px;">
+  <h2>Калькулятор кровли по высоте конька</h2>
+
+  <div class="rh-input-layout">
+    <div class="rh-fields">
+      <div class="field">
+        <label for="rh_type">Тип кровли</label>
+        <select id="rh_type">
+          <option value="single">Односкатная</option>
+          <option value="double">Двускатная</option>
+          <option value="hip">Вальмовая</option>
+          <option value="tent">Шатровая</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="rh_a">Длина кровли (a), м</label>
+        <input id="rh_a" type="number" min="0" step="0.01" value="0" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label for="rh_b">Ширина кровли (b), м</label>
+        <input id="rh_b" type="number" min="0" step="0.01" value="0" inputmode="decimal">
+      </div>
+      <div class="field" id="rh_c_wrap" style="display:none;">
+        <label for="rh_c">Длина конька (c), м</label>
+        <input id="rh_c" type="number" min="0" step="0.01" value="0" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label for="rh_h">Высота кровли (h), м</label>
+        <input id="rh_h" type="number" min="0" step="0.01" value="0" inputmode="decimal">
+      </div>
+      <button id="rh_calc" type="button">Рассчитать</button>
+    </div>
+
+    <div class="rh-schemes" aria-label="Схемы кровли">
+      <div class="rh-scheme-card">
+        <div class="rh-scheme-title">Вид сбоку</div>
+        <div id="rh_side_svg" class="rh-svg-wrap"></div>
+      </div>
+      <div class="rh-scheme-card">
+        <div class="rh-scheme-title">3D вид</div>
+        <div id="rh_3d_svg" class="rh-svg-wrap"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="out hidden" id="rh_result_wrap" style="margin-top:16px;">
+    <div id="rh_result_summary"></div>
+    <div class="rh-result-title">Вид сверху</div>
+    <div id="rh_top_svg" class="rh-top-svg"></div>
+    <div class="actions" style="margin-top:12px;">
+      <button id="rh_pdf" type="button">Скачать PDF</button>
+    </div>
+  </div>
+  <div class="err" id="rh_err"></div>
+</section>
+
 <!-- КАЛЬКУЛЯТОР СОФИТОВ -->
 <section class="card calc-item" data-calc="soffit" style="margin-top:16px;">
   <h2>Калькулятор софитов</h2>
