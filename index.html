@@ -3,14 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Калькуляторы продукции</title>
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <meta name="author" content="Тёмина Юлия">
+  <title>АЗКиФ · Калькуляторы</title>
+  <link rel="icon" type="image/png" href="img/logo-mark.png">
   <link rel="shortcut icon" href="favicon.ico">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Калькуляторы</h1>
+  <header class="topbar">
+    <a class="logo" href="#">
+      <img src="img/logo-new.svg" alt="АЗКиФ — калькуляторы" class="logo-img">
+    </a>
+    <div class="top-right"><span class="env-badge"><i></i>Онлайн-версия</span></div>
+  </header>
+  <main class="page">
   <div class="top-note">
     Все пожелания и сообщения об ошибках отправляйте через форму:
     <a href="https://forms.gle/aV3anXVvS5LS3Gds5" target="_blank" rel="noopener noreferrer">https://forms.gle/aV3anXVvS5LS3Gds5</a>
@@ -592,5 +599,8 @@
 
 <script src="main.js"></script>
 
+  </main>
+  <footer class="site-foot"><span>© <span id="footYear">2026</span> АЗКиФ — завод кровли и фасада</span><span>Разработчик: <b>Тёмина Юлия</b></span><span class="ver" title="Версия калькулятора">Версия 1.2 · обновлено 13.11.2026 16:12</span></footer>
+  <script>document.getElementById("footYear").textContent = new Date().getFullYear();</script>
 </body>
 </html>

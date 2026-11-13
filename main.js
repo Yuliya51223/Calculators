@@ -109,6 +109,10 @@ let lastFinalAgg = null;
 
       const removeBtn = sec.querySelector('.remove-section');
       if (removeBtn) removeBtn.style.display = 'inline-block';
+
+      // общие параметры (углы, кирпич/бетон, профтруба, заглубление) — только в первой секции
+      const isFirst = sec === sections[0];
+      sec.querySelectorAll('.j_global').forEach(f => f.classList.toggle('hidden', !isFirst));
     });
 
     sectionIndex = sections.length;
@@ -176,13 +180,13 @@ let lastFinalAgg = null;
             <input class="j_span_leaf2" type="number" min="0.5" step="0.01">
           </div>` : ''}
 
-          <div class="field">
-            <label>Количество углов 90°</label>
+          <div class="field j_global">
+            <label>Количество углов 90° <span class="hint">(на весь забор)</span></label>
             <input class="j_corners" type="number" min="0" step="1" value="0">
           </div>
 
-          <div class="field">
-            <label>Кирпичные/Бетонные столбы</label>
+          <div class="field j_global">
+            <label>Кирпичные/Бетонные столбы <span class="hint">(на весь забор)</span></label>
             <div class="hint j-brick-note">Можно выбирать "Да", если не нужен расчёт профтруб</div>
             <select class="j_brick">
               <option value="">— выберите —</option>
@@ -193,8 +197,8 @@ let lastFinalAgg = null;
         </div>
 
         <div class="col">
-          <div class="field">
-            <label>Размер профтрубы</label>
+          <div class="field j_global">
+            <label>Размер профтрубы <span class="hint">(на весь забор)</span></label>
             <select class="j_pipe">
               <option value="">— выберите —</option>
               <option value="none">нет</option>
@@ -203,17 +207,17 @@ let lastFinalAgg = null;
             </select>
           </div>
 
-          ${itemType === 'section' ? `
-          <div class="field">
-            <label>Заглубление столба (м)</label>
+          <div class="field j_global">
+            <label>Заглубление столба (м) <span class="hint">(на весь забор)</span></label>
             <select class="j_depth">
               ${optionsHTML(jDepths, '— выберите —')}
             </select>
-          </div>` : ''}
+          </div>
         </div>
       </div>
     `;
 
+    const prevFirst = sectionsWrap.querySelector('.section');
     sectionsWrap.appendChild(div);
 
     const nameSel = div.querySelector('.j_name');
@@ -234,8 +238,9 @@ let lastFinalAgg = null;
         if (isBrick) pipeSel.value = '';
       }
       if (depthSel){
-        depthSel.disabled = isBrick;
-        if (isBrick) depthSel.value = '';
+        const noDepth = isBrick || pipeSel?.value === 'none';
+        depthSel.disabled = noDepth;
+        if (noDepth) depthSel.value = '';
       }
 
       if (div.dataset.itemType === 'gate'){
@@ -279,10 +284,33 @@ let lastFinalAgg = null;
       jResetOutput();
     });
 
+    div.querySelector('.j_pipe')?.addEventListener('change', () => {
+      updateSectionState();
+      jResetOutput();
+    });
+
+    // Новая секция: наименование забора берётся из первой секции
+    if (prevFirst){
+      const firstName = prevFirst.querySelector('.j_name')?.value || '';
+      if (firstName) nameSel.value = firstName;
+    }
+
     updateSectionState();
 
     const removeBtn = div.querySelector('.remove-section');
     removeBtn.addEventListener('click', () => {
+      // если удаляем первую секцию — общие параметры переходят к следующей
+      const all = Array.from(sectionsWrap.querySelectorAll('.section'));
+      if (all[0] === div && all[1]){
+        ['j_corners','j_brick','j_pipe','j_depth'].forEach(c => {
+          const from = div.querySelector('.' + c), to = all[1].querySelector('.' + c);
+          if (from && to) to.value = from.value;
+        });
+        all[1].querySelector('.j_brick')?.dispatchEvent(new Event('change'));
+        all[1].querySelector('.j_pipe')?.dispatchEvent(new Event('change'));
+        const d = div.querySelector('.j_depth'), d2 = all[1].querySelector('.j_depth');
+        if (d && d2) d2.value = d.value;
+      }
       div.remove();
       updateSectionTitles();
       jResetOutput();
@@ -389,7 +417,11 @@ let lastFinalAgg = null;
         ? ((isFinite(spanLeaf1) ? spanLeaf1 : 0) + (isFinite(spanLeaf2) ? spanLeaf2 : 0))
         : span;
       return { itemType, gateType, name, height, span, spanLeaf1, spanLeaf2, totalSpan, sectionsQty, corners, brick, pipe, depth };
-    });
+    }).map((r, i, arr) => Object.assign(r, {
+      // общие параметры берутся из первой секции и относятся ко всем
+      brick: arr[0].brick, pipe: arr[0].pipe, depth: arr[0].depth,
+      corners: i === 0 ? arr[0].corners : 0
+    }));
   }
 
   function roundToCmMeters(x){ return Math.round(Number(x) * 100) / 100; } // до 0,01 м
@@ -430,6 +462,22 @@ let lastFinalAgg = null;
     return 2;
   }
 
+// Планки (крышка, завершающая) выпускаются только 2 м и 3 м.
+// Возвращает список длин планок, перекрывающих пролёт с минимальным запасом (затем — с минимумом штук).
+function planksForSpan(span){
+  if (span <= 2 + 1e-9) return [2];
+  if (span <= 3 + 1e-9) return [3];
+  let best = null;
+  for (let n3 = 0; n3 <= Math.ceil(span / 3); n3++){
+    for (let n2 = 0; n2 <= Math.ceil(span / 2); n2++){
+      const tot = n3 * 3 + n2 * 2;
+      if (tot + 1e-9 < span) continue;
+      const cnt = n3 + n2;
+      if (!best || tot < best.tot - 1e-9 || (Math.abs(tot - best.tot) < 1e-9 && cnt < best.cnt)) best = { n3, n2, tot, cnt };
+    }
+  }
+  return Array(best.n3).fill(3).concat(Array(best.n2).fill(2));
+}
 function sizeBySpan(span){
     if (span <= 2) return 2;
     if (span <= 3) return 3;
@@ -503,11 +551,12 @@ function sizeBySpan(span){
       if (!s.brick) { jErr.textContent = `${itemLabel} ${idx}: выберите кирпичные/бетонные столбы`; return; }
       if (s.brick !== 'yes') {
         if (!s.pipe) { jErr.textContent = `${itemLabel} ${idx}: выберите размер профтрубы`; return; }
-        if (s.itemType === 'section' && (!isFinite(s.depth) || s.depth < 0.3 || s.depth > 1.5)) { jErr.textContent = `${itemLabel} ${idx}: заглубление 0,3–1,5 м`; return; }
+        if (s.pipe !== 'none' && (!isFinite(s.depth) || s.depth < 0.3 || s.depth > 1.5)) { jErr.textContent = `${itemLabel} ${idx}: заглубление 0,3–1,5 м`; return; }
       }
     }
 
     const agg = {};
+    let cornersLeft = data[0].corners || 0; // углы указаны в первой секции на весь забор
 
     data.forEach(s => {
       const spansForLamel = [];
@@ -542,9 +591,12 @@ function sizeBySpan(span){
 
       // Стойка
       const stoykaSize = sizeByHeightStoykaKrepezh(s.height);
+      // распашные — 4 стойки; откатные от 4 м делятся пополам трубой — ещё +2 стойки (итого 4)
       const stoykaQty = s.itemType === 'gate' && s.gateType === 'swing'
         ? s.sectionsQty * 4
-        : s.sectionsQty * 2;
+        : (s.itemType === 'gate' && s.gateType === 'sliding' && s.totalSpan >= 4)
+          ? s.sectionsQty * (2 + 2)
+          : s.sectionsQty * 2;
       addAgg(agg, 'stoyka', stoykaSize, stoykaQty);
 
       // Крепежная планка
@@ -571,23 +623,27 @@ function sizeBySpan(span){
 
       // Крышка
       spansForAccessories.forEach(accSpan => {
-        if (s.itemType === 'gate' && Math.abs(accSpan - 4) < 1e-9) {
-          // 4-метровые планки не изготавливаются: на одни ворота идут 2 планки по 2 м
-          addAgg(agg, 'kryshka', 2, s.sectionsQty * 2);
-        } else {
-          addAgg(agg, 'kryshka', sizeBySpan(accSpan), s.sectionsQty);
-        }
+        planksForSpan(accSpan).forEach(pl => addAgg(agg, 'kryshka', pl, s.sectionsQty));
       });
 
       // Декоративная накладка (если столбы НЕ кирп/бетон)
-      if (s.brick === 'no') {
+      if (s.brick === 'no' && s.pipe !== 'none') {
         const dekorSize = sizeByHeightDekor(s.height);
-        const dekorQty = (s.sectionsQty + 1) * 2 - (s.corners * 2);
+        // секция: 2 шт на каждый столб (столбов на 1 больше, чем секций), угловой столб — минус 2 шт на угол
+        // калитка: 4 шт; распашные ворота: 8 шт; откатные: до 4 м — 4 шт, от 4 м — 6 шт (на единицу изделия)
+        let dekorQty;
+        if (s.itemType === 'wicket') dekorQty = (4 + 2) * s.sectionsQty; // 4 на калитку + 2 на дополнительный столб
+        else if (s.itemType === 'gate') {
+          dekorQty = (s.gateType === 'swing' ? 8 : (s.totalSpan >= 4 ? 6 : 4)) * s.sectionsQty;
+        } else {
+          dekorQty = (s.sectionsQty + 1) * 2 - (cornersLeft * 2);
+          cornersLeft = 0; // углы вычитаются один раз на весь забор
+        }
         addAgg(agg, 'dekor', dekorSize, dekorQty);
       }
 
       // Угловая декоративная накладка (если углы > 0)
-      if (s.corners > 0) {
+      if (s.corners > 0 && s.pipe !== 'none') {
         const dekorUSize = sizeByHeightDekor(s.height);
         const dekorUQty = s.corners;
         addAgg(agg, 'dekor_ugol', dekorUSize, dekorUQty);
@@ -595,12 +651,7 @@ function sizeBySpan(span){
 
       // Планка завершающая
       spansForAccessories.forEach(accSpan => {
-        if (s.itemType === 'gate' && Math.abs(accSpan - 4) < 1e-9) {
-          // 4-метровые планки не изготавливаются: на одни ворота идут 2 планки по 2 м
-          addAgg(agg, 'finish', 2, s.sectionsQty * 2);
-        } else {
-          addAgg(agg, 'finish', sizeBySpan(accSpan), s.sectionsQty);
-        }
+        planksForSpan(accSpan).forEach(pl => addAgg(agg, 'finish', pl, s.sectionsQty));
       });
 
       // Профтруба
@@ -610,6 +661,9 @@ function sizeBySpan(span){
           profftrubaQty = Math.ceil(((s.totalSpan * 2) + (s.height * 3)) / 6);
         } else if (s.itemType === 'gate' && s.gateType === 'swing') {
           profftrubaQty = Math.ceil(((s.height * 4) + (s.spanLeaf1 * 2) + (s.spanLeaf2 * 2)) / 6);
+        } else if (s.itemType === 'wicket') {
+          // калитка: 2 своих столба + 1 дополнительный столб высотой калитки
+          profftrubaQty = Math.ceil((3 * (s.height + s.depth)) / 6);
         } else {
           profftrubaQty = Math.ceil((2 * (s.height + s.depth)) / 6);
         }
@@ -617,19 +671,24 @@ function sizeBySpan(span){
       }
 
       // Саморезы для стойки
-      if (s.brick !== 'yes') {
+      if (s.brick !== 'yes' && s.pipe !== 'none') {
         addAgg(agg, 'screw_stoyka', '5.5x19', stoykaQty * 5);
       }
 
       // Саморезы ПШ
-      const kryshkaQty = spansForAccessories.length * s.sectionsQty;
-      const finishQty = spansForAccessories.length * s.sectionsQty;
-      const screwPSHQty =
-        (lamelQty * 4) +
-        (krepezhQty * lamelQty) +
-        (kryshkaQty * 4) +
-        (finishQty * 2) +
-        (finishQty * krepezhQty);
+      // Расчёт ведём на одну секцию и умножаем на количество секций
+      // (раньше количество секций умножалось дважды: через lamelQty и krepezhQty)
+      const nSec = s.sectionsQty;
+      const lamelUnit = lamelQty / nSec;
+      const krepezhUnit = krepezhQty / nSec;
+      const accUnit = spansForAccessories.reduce((t, sp) => t + planksForSpan(sp).length, 0);
+      const screwPSHQty = nSec * (
+        (lamelUnit * 4) +
+        (krepezhUnit * lamelUnit) +
+        (accUnit * 4) +
+        (accUnit * 2) +
+        (accUnit * krepezhUnit)
+      );
 
       addAgg(agg, 'screw_psh', '4.2x16', screwPSHQty);
     });
