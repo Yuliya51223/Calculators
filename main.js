@@ -1648,6 +1648,8 @@ const gExtAngles = g('g_ext_angles');
 const gIntAngles = g('g_int_angles');
 
 const gCalcBtn = g('g_calcBtn');
+const gPdfBtn = g('g_pdfBtn');
+let gLastRows = null;
 const gTableWrap = g('g_tableWrap');
 const gErr = g('g_err');
 
@@ -1787,6 +1789,8 @@ function gCalc(){
 
   gErr.textContent = '';
   if (gTableWrap) gTableWrap.innerHTML = '';
+  gLastRows = null;
+  gPdfBtn?.classList.add('hidden');
 
   const L = Number(gLength.value);
   const H = Number(gHeight.value);
@@ -1958,6 +1962,67 @@ function gCalc(){
   }
 
   gRenderTable(rows);
+  gLastRows = rows;
+  gPdfBtn?.classList.remove('hidden');
+}
+
+// ===== PDF: водосточная система =====
+function gCollectInputs(){
+  const sec = document.querySelector('section[data-calc="gutter"]');
+  const info = [];
+  if (!sec) return info;
+  sec.querySelectorAll('label').forEach(lb => {
+    const wrap = lb.parentElement;
+    if (!wrap || wrap.closest('.hidden')) return;
+    const el = (lb.htmlFor && document.getElementById(lb.htmlFor)) || wrap.querySelector('input:not([type=hidden]), select');
+    if (!el || el.disabled) return;
+    let val = el.tagName === 'SELECT' ? (el.selectedOptions[0]?.textContent || '') : el.value;
+    if (el.type === 'checkbox') val = el.checked ? 'Да' : 'Нет';
+    const name = lb.textContent.replace(/\s+/g, ' ').trim();
+    if (name && String(val).trim() !== '') info.push([name, String(val).trim()]);
+  });
+  const rt = document.querySelector('#g_roof_picks .roof-btn.active span');
+  if (rt) info.unshift(['Тип крыши', rt.textContent.trim()]);
+  return info;
+}
+
+function downloadGutterPdf(){
+  if (!gLastRows) return;
+  const jsPDF = window.jspdf?.jsPDF;
+  if (!jsPDF){ gErr.textContent = 'PDF не может быть создан: jsPDF не загружен'; return; }
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const fontB64 = window.__PDF_FONT_MONTSERRAT__;
+  const hasMontserrat = !!fontB64;
+  if (hasMontserrat){
+    try {
+      doc.addFileToVFS('Montserrat-Regular.ttf', fontB64);
+      doc.addFont('Montserrat-Regular.ttf', 'Montserrat', 'normal');
+      doc.setFont('Montserrat', 'normal');
+    } catch(e) {}
+  }
+  doc.setFontSize(14);
+  doc.text('Расчёт водосточной системы', 14, 14);
+  doc.setFontSize(9);
+  doc.text(new Date().toLocaleDateString('ru-RU'), 196, 14, { align: 'right' });
+
+  const st = {
+    font: hasMontserrat ? 'Montserrat' : undefined, fontSize: 9, cellPadding: 2, valign: 'middle',
+    lineWidth: 0.2, lineColor: [0,0,0]
+  };
+  const hs = { fillColor: [240,240,240], textColor: 0, lineWidth: 0.2, lineColor: [0,0,0] };
+  if (doc.autoTable){
+    doc.autoTable({
+      head: [['Параметр', 'Значение']], body: gCollectInputs(), startY: 20, theme: 'grid',
+      styles: st, headStyles: hs, alternateRowStyles: { fillColor: [250,250,250] }, margin: { left: 14, right: 14 }
+    });
+    doc.autoTable({
+      head: [['Элемент', 'Кол-во']], body: gLastRows.map(r => [String(r[0]), String(r[1])]),
+      startY: doc.lastAutoTable.finalY + 8, theme: 'grid',
+      styles: st, headStyles: hs, alternateRowStyles: { fillColor: [250,250,250] },
+      columnStyles: { 1: { halign: 'center', cellWidth: 30 } }, margin: { left: 14, right: 14 }
+    });
+  }
+  doc.save('raschet-vodostochnaya-sistema.pdf');
 }
 
 // events
@@ -1985,6 +2050,7 @@ gRoofPicks?.addEventListener('click', (e) => {
 });
 
 gCalcBtn?.addEventListener('click', gCalc);
+gPdfBtn?.addEventListener('click', downloadGutterPdf);
 
 // init
 gRenderType();

@@ -879,3 +879,16 @@ main.page{flex:1;width:100%}
 label .hint{text-transform:none;letter-spacing:0;font-weight:500}
 
 .site-foot .ver{flex-basis:100%;font-size:12px;color:var(--muted);opacity:.85}
+
+/* кнопки выбора типа крыши */
+.roof-picks{gap:12px}
+.roof-btn{height:auto;min-height:0;padding:12px 8px 10px;gap:8px;justify-content:flex-start;align-items:center;background:#fff;color:var(--ink);border:1px solid var(--line-2);box-shadow:none}
+.roof-btn:hover{background:var(--brand-50);border-color:var(--brand-200);color:var(--ink)}
+.roof-btn.active,.roof-btn.active:hover{background:var(--brand-50);color:var(--brand-700);border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-100)}
+.roof-btn img{width:56px;height:56px;flex:none}
+.roof-btn span{font-size:13px;font-weight:600;line-height:1.2;color:inherit}
+#g_pdfBtn{background:#fff;color:var(--brand);border-color:var(--line-2);box-shadow:none}
+#g_pdfBtn:hover{background:var(--brand-50);border-color:var(--brand-200)}
+.roof-btn{padding:12px 4px 10px;min-width:0;overflow:hidden}
+.roof-btn span{font-size:11.5px;letter-spacing:-.01em;max-width:100%}
+.roof-btn img{width:52px;height:52px}
